@@ -1,0 +1,58 @@
+<aside
+  id="drawer-navigation"
+  class="fixed top-0 left-0 z-40 w-64 h-screen pt-14 transition-transform duration-300 ease-in-out -translate-x-full md:translate-x-0 bg-white border-r border-gray-200 dark:bg-gray-900 dark:border-gray-700 shadow-lg"
+  aria-label="Sidenav"
+>
+  <!-- Contenido Scrollable -->
+  <div class="overflow-y-auto py-5 px-3 h-full">
+    <!-- Título -->
+    <h2
+      class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100 tracking-wide"
+    >
+      Unidades
+    </h2>
+
+    <!-- Lista de Unidades -->
+    <ul class="space-y-2">
+      <li *ngFor="let unidad of unidades">
+        <button
+          class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium border border-transparent text-gray-700 dark:text-gray-300 hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-800 dark:hover:text-white transition-all duration-200 ease-in-out"
+          [class.bg-blue-600]="unidadSeleccionada === unidad"
+          [class.text-white]="unidadSeleccionada === unidad"
+          [class.shadow-md]="unidadSeleccionada === unidad"
+          (click)="seleccionarUnidad(unidad)"
+        >
+          <span class="truncate">{{ unidad.nombre }}</span>
+        </button>
+      </li>
+    </ul>
+
+    <!-- Lista de Semanas -->
+    <div *ngIf="unidadSeleccionada" class="mt-6 animate-fadeIn">
+      <h3
+        class="text-md font-semibold mb-4 text-gray-800 dark:text-gray-200 border-b pb-2"
+      >
+        {{ unidadSeleccionada.nombre }} - Semanas
+      </h3>
+      <ul class="space-y-2">
+        <li *ngFor="let sesion of unidadSeleccionada.semanas">
+          <a
+            [routerLink]="['/sesión' + sesion.id]"
+            class="block w-full px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 border border-transparent hover:bg-green-100 hover:text-green-800 dark:hover:bg-green-800 dark:hover:text-white transition-all duration-200 ease-in-out"
+          >
+            {{ sesion.nombre }}
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Footer fijo -->
+  <div
+    class="hidden absolute bottom-0 left-0 justify-center items-center p-4 space-x-4 w-full lg:flex bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+  >
+    <p class="text-xs text-gray-500 dark:text-gray-400">
+      Made By: GroupMatesito
+    </p>
+  </div>
+</aside>
