@@ -11,27 +11,26 @@ import { RouterLink } from '@angular/router';
   styleUrls: ['./punto-flotante.component.css'],
 })
 export class PuntoFlotanteComponent {
-  base!: number; // B
-  mantisa!: number; // t
-  menorPot!: number; // m
-  mayorPot!: number; // M
+  base!: number; // B → La base del sistema (ej: 2 para binario, 10 para decimal)
+  mantisa!: number; // t → El número de dígitos significativos de la mantisa
+  menorPot!: number; // m → El exponente más pequeño permitido
+  mayorPot!: number; // M → El exponente más grande permitido
 
-  // resultados
-  formalizacion: string | null = null;
-  elementos: number | null = null;
-  maxNum: number | null = null;
-  minNum: number | null = null;
-  rango: string | null = null;
+  // resultados que calcula el sistema
+  formalizacion: string | null = null; // la notación formal F(B, t, m, M)
+  elementos: number | null = null; // cantidad total de números que el sistema puede representar
+  maxNum: number | null = null; // el número más grande que puede representar el sistema
+  minNum: number | null = null; // el número más pequeño (positivo) que puede representar el sistema
+  rango: string | null = null; // el intervalo [mínimo, máximo]
 
-  // pruebas
-  numeroPrueba!: number;
-  metodo: 'truncamiento' | 'redondeo' = 'truncamiento';
-  resultadoPrueba: string | null = null;
+  // pruebas con un número
+  numeroPrueba!: number; // número que el usuario quiere probar si cabe en el sistema
+  metodo: 'truncamiento' | 'redondeo' = 'truncamiento'; // cómo aproximar la mantisa
+  resultadoPrueba: string | null = null; // resultado de la prueba
 
-  // errores y avisos
+  // mensajes de error e información
   mensajeError: string | null = null;
   mensajeInfo: string | null = null;
-
   mensajeError2: string | null = null;
 
   calcularSistema() {
