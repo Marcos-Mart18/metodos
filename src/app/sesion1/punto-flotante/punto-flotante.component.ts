@@ -37,6 +37,7 @@ export class PuntoFlotanteComponent {
   calcularSistema() {
     this.mensajeError = null;
     this.mensajeInfo = null;
+
     if (
       !this.base ||
       !this.mantisa ||
@@ -44,33 +45,29 @@ export class PuntoFlotanteComponent {
       this.mayorPot == null
     ) {
       this.mensajeError = 'Completa todos los datos.';
-      this.mensajeInfo = null;
       return;
     }
 
     if (this.base < 2) {
       this.mensajeError = 'La base debe ser mayor o igual a 2.';
-      this.mensajeInfo = null;
       return;
     }
 
     if (this.mantisa <= 0 || !Number.isInteger(this.mantisa)) {
       this.mensajeError = 'La mantisa debe ser un entero positivo.';
-      this.mensajeInfo = null;
       return;
     }
 
     if (this.menorPot >= this.mayorPot) {
       this.mensajeError =
         'La menor potencia debe ser menor que la mayor potencia.';
-      this.mensajeInfo = null;
       return;
     }
 
-    // si no existen errores empezamos a calcular
+    // --- Formalización ---
     this.formalizacion = `F(${this.base}, ${this.mantisa}, ${this.menorPot}, ${this.mayorPot})`;
 
-    // Fórmula cantidad de elementos
+    // --- Cantidad de elementos ---
     this.elementos =
       2 *
         (this.base - 1) *
@@ -78,16 +75,28 @@ export class PuntoFlotanteComponent {
         Math.pow(this.base, this.mantisa - 1) +
       1;
 
-    // Número más grande
-    this.maxNum =
-      (Math.pow(this.base, this.mantisa - 1) /
+    // --- Número máximo representable ---
+    // ( (B^t - 1) / B^t ) * B^M
+    let max =
+      ((Math.pow(this.base, this.mantisa) - 1) /
         Math.pow(this.base, this.mantisa)) *
       Math.pow(this.base, this.mayorPot);
 
-    // Número más pequeño
-    this.minNum = Math.pow(this.base, this.menorPot - 1);
+    // Redondear el máximo según la cantidad de dígitos significativos
+    let maxStr = max.toPrecision(this.mantisa);
+    this.maxNum = Number(maxStr);
 
+    // --- Número mínimo representable ---
+    // B^(m-1)
+    let min = Math.pow(this.base, this.menorPot - 1);
+
+    // Redondear el mínimo también
+    let minStr = min.toPrecision(this.mantisa);
+    this.minNum = Number(minStr);
+
+    // --- Rango ---
     this.rango = `[${this.minNum} , ${this.maxNum}]`;
+
     this.mensajeInfo = 'Sistema calculado correctamente.';
   }
 
@@ -109,47 +118,88 @@ export class PuntoFlotanteComponent {
     }
 
     const n = this.numeroPrueba;
+    const signo = n < 0 ? '-' : '';
 
+    // --- Overflow ---
     if (n > this.maxNum) {
-      this.resultadoPrueba = `Overflow 🚨 → ${n} > ${this.maxNum}`;
+      this.resultadoPrueba =
+        `Overflow 🚨 → ${n} > ${this.maxNum}\n` +
+        `Representado como ∞ (sistema ${this.formalizacion})`;
       return;
     }
-    if (n < this.minNum) {
-      this.resultadoPrueba = `Underflow ⚠ → ${n} < ${this.minNum}`;
-      return;
-    }
-
-    // Número dentro del rango → aplicar truncamiento/redondeo
-    let resultado: string;
-
-    const numStr = n.toString();
-    const [entero, decimal] = numStr.split('.');
-
-    if (!decimal || this.mantisa <= 0) {
-      this.resultadoPrueba = `${n} está dentro del rango.`;
+    if (n < -this.maxNum) {
+      this.resultadoPrueba =
+        `Overflow 🚨 → ${n} < -${this.maxNum}\n` +
+        `Representado como -∞ (sistema ${this.formalizacion})`;
       return;
     }
 
-    // Mantener solo "t" cifras en la parte decimal
-    const decLimit = decimal.slice(0, this.mantisa);
+    // --- Underflow ---
+    if (Math.abs(n) < this.minNum && n !== 0) {
+      this.resultadoPrueba =
+        `Underflow ⚠ → |${n}| < ${this.minNum}\n` +
+        `Representado como 0 (sistema ${this.formalizacion})`;
+      return;
+    }
 
+    // --- Número dentro del rango ---
+    const base = this.base;
+    const t = this.mantisa;
+
+    // Convertimos a valor absoluto
+    let exp = 0;
+    let valor = Math.abs(n);
+
+    // Normalizamos con respecto a la base
+    while (valor >= base) {
+      valor /= base;
+      exp++;
+    }
+    while (valor < 1 && valor !== 0) {
+      valor *= base;
+      exp--;
+    }
+
+    // --- Construcción de la mantisa en cualquier base ---
+    let digits: string[] = [];
+    let frac = valor;
+    for (let i = 0; i < t; i++) {
+      const d = Math.floor(frac);
+      digits.push(d.toString(base).toUpperCase());
+      frac = (frac - d) * base;
+    }
+
+    // Truncamiento o redondeo
     if (this.metodo === 'truncamiento') {
-      resultado = `${entero}.${decLimit}`;
+      // Mantener t dígitos
     } else {
-      // redondeo
-      const nextDigit = parseInt(decimal[this.mantisa] || '0', 10);
-      let truncado = parseInt(decLimit, 10);
-
-      if (nextDigit >= 5) {
-        truncado += 1;
+      // Redondeo: mirar el siguiente dígito
+      const nextDigit = Math.floor(frac);
+      if (nextDigit >= base / 2) {
+        // Propagamos acarreo
+        for (let i = digits.length - 1; i >= 0; i--) {
+          let d = parseInt(digits[i], base) + 1;
+          if (d === base) {
+            digits[i] = '0';
+            if (i === 0) {
+              // Overflow en la mantisa → ajustamos exponente
+              digits.unshift('1');
+              digits = digits.slice(0, t);
+              exp++;
+            }
+          } else {
+            digits[i] = d.toString(base).toUpperCase();
+            break;
+          }
+        }
       }
-
-      // asegurar que no crezca en longitud
-      resultado = `${entero}.${truncado
-        .toString()
-        .padStart(this.mantisa, '0')}`;
     }
-    this.mensajeError2 = null;
-    this.resultadoPrueba = `${n} está dentro del rango → Representado como ${resultado} (${this.metodo})`;
+
+    const mantisaFinal = `${digits[0]}.${digits.slice(1).join('')}`;
+
+    this.resultadoPrueba =
+      `${n} está dentro del rango →\n` +
+      `Representado como ${signo}${mantisaFinal} × ${base}^${exp} ` +
+      `(criterio ${this.metodo}, sistema ${this.formalizacion})`;
   }
 }
