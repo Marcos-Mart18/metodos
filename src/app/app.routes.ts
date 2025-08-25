@@ -3,6 +3,9 @@ import { HomeComponent } from './home/home.component';
 import { Sesion1Component } from './sesion1/sesion1.component';
 import { TheoryErrorComponent } from './sesion1/theory-error/theory-error.component';
 import { PuntoFlotanteComponent } from './sesion1/punto-flotante/punto-flotante.component';
+import { Sesion2Component } from './sesion2/sesion2.component';
+import { BiseccionComponent } from './sesion2/biseccion/biseccion.component';
+import { FalsaPosicionComponent } from './sesion2/falsa-posicion/falsa-posicion.component';
 
 export const routes: Routes = [
   {
@@ -25,6 +28,18 @@ export const routes: Routes = [
   {
     path: 'punto-flotante',
     component: PuntoFlotanteComponent,
+  },
+  {
+    path: 'sesion2',
+    component: Sesion2Component,
+  },
+  {
+    path: 'biseccion',
+    component: BiseccionComponent,
+  },
+  {
+    path: 'falsa-posicion',
+    component: FalsaPosicionComponent,
   },
   {
     path: '**',

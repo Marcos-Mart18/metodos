@@ -15,7 +15,7 @@ export class SidebarComponent {
       expandida: false,
       semanas: [
         { id: 1, nombre: 'Sesión 1' },
-        // { id: 2, nombre: 'Sesión 2' },
+        { id: 2, nombre: 'Sesión 2' },
         // { id: 3, nombre: 'Sesión 3' },
         // { id: 4, nombre: 'Sesión 4' }
       ],
