@@ -82,15 +82,15 @@ export class PuntoFlotanteComponent {
       Math.pow(this.base, this.mayorPot);
 
     // Redondear el máximo según la cantidad de dígitos significativos
-    let maxStr = max.toPrecision(this.mantisa);
+    let maxStr = max;
     this.maxNum = Number(maxStr);
 
     // --- Número mínimo representable ---
-    // B^(m-1)
-    let min = Math.pow(this.base, this.menorPot - 1);
+    // B^m
+    let min = Math.pow(this.base, this.menorPot);
 
     // Redondear el mínimo también
-    let minStr = min.toPrecision(this.mantisa);
+    let minStr = min;
     this.minNum = Number(minStr);
 
     // --- Rango ---
