@@ -46,8 +46,8 @@ export class FalsaPosicionComponent {
     this.ggbApp = new GGBApplet(
       {
         appName: 'graphing',
-        width: 600,
-        height: 400,
+        width: 700,
+        height: 500,
         showToolBar: false,
         showAlgebraInput: true,
         showMenuBar: false,
