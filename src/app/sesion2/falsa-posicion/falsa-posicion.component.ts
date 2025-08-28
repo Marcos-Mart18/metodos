@@ -61,17 +61,42 @@ export class FalsaPosicionComponent {
     this.ecuacion = (this.ecuacion || '') + simbolo;
   }
 
-  private normalizarEcuacion(): string {
+  private normalizarEcuacionMath(): string {
     if (!this.ecuacion) return '';
-    if (this.ecuacion.includes('=')) {
-      const [lhs, rhs] = this.ecuacion.split('=');
+
+    // Reemplazar ln(...) por log(...) → math.js lo interpreta como log natural
+    let ecuacionNormalizada = this.ecuacion.replace(
+      /ln\(([^()]*)\)/g,
+      'log($1)'
+    );
+
+    if (ecuacionNormalizada.includes('=')) {
+      const [lhs, rhs] = ecuacionNormalizada.split('=');
       return `(${lhs.trim()}) - (${rhs.trim()})`;
     }
-    return this.ecuacion;
+
+    return ecuacionNormalizada;
+  }
+
+  private normalizarEcuacionGeoGebra(): string {
+    if (!this.ecuacion) return '';
+
+    // Reemplazar ln(...) por ln(...) explícito para GeoGebra
+    let ecuacionNormalizada = this.ecuacion.replace(
+      /ln\(([^()]*)\)/g,
+      'ln($1)'
+    );
+
+    if (ecuacionNormalizada.includes('=')) {
+      const [lhs, rhs] = ecuacionNormalizada.split('=');
+      return `(${lhs.trim()}) - (${rhs.trim()})`;
+    }
+
+    return ecuacionNormalizada;
   }
 
   detectarIntervalos() {
-    const expr = this.normalizarEcuacion();
+    const expr = this.normalizarEcuacionMath(); // ✅ para cálculos numéricos
     if (!expr) {
       this.mensaje = 'Por favor, ingresa una ecuación válida';
       return;
@@ -80,15 +105,24 @@ export class FalsaPosicionComponent {
     const f = (x: number) => math.evaluate(expr, { x });
     this.intervalos = [];
 
-    // Recorrer la función para detectar intervalos con cambio de signo
     for (let i = -100; i < 100; i++) {
-      if (f(i) * f(i + 1) < 0) {
-        this.intervalos.push({ Xa: i, Xb: i + 1 });
+      try {
+        const fa = f(i);
+        const fb = f(i + 1);
+
+        if (!isFinite(fa) || !isFinite(fb)) continue;
+
+        if (fa * fb < 0) {
+          this.intervalos.push({ Xa: i, Xb: i + 1 });
+        }
+      } catch {
+        continue; // ignorar valores no definidos (log negativo, división por 0, etc.)
       }
     }
 
     if (this.intervalos.length === 0) {
-      this.mensaje = 'No se encontró ningún intervalo con cambio de signo en [-100,100]';
+      this.mensaje =
+        'No se encontró ningún intervalo con cambio de signo en [-100,100]';
     } else {
       this.mensaje = null;
       this.intervaloSeleccionado = 0;
@@ -97,21 +131,22 @@ export class FalsaPosicionComponent {
     setTimeout(() => {
       if (typeof ggbApplet !== 'undefined') {
         ggbApplet.reset();
-        ggbApplet.evalCommand(`f(x)=${expr}`);
+        ggbApplet.evalCommand(`f(x)=${this.normalizarEcuacionGeoGebra()}`); // ✅ versión GeoGebra
       }
     }, 500);
   }
 
   graficarFuncion() {
-    const expr = this.normalizarEcuacion();
-    if (!expr) {
-      this.mensaje = 'Por favor, ingresa una ecuación válida antes de graficar.';
+    const exprGeo = this.normalizarEcuacionGeoGebra(); // ✅ para GeoGebra
+    if (!exprGeo) {
+      this.mensaje =
+        'Por favor, ingresa una ecuación válida antes de graficar.';
       return;
     }
 
     if (typeof ggbApplet !== 'undefined') {
       ggbApplet.reset();
-      ggbApplet.evalCommand(`f(x)=${expr}`);
+      ggbApplet.evalCommand(`f(x)=${exprGeo}`);
     }
 
     this.funcionGraficada = true;
@@ -122,13 +157,13 @@ export class FalsaPosicionComponent {
     this.resultados = [];
     this.paginaActual = 1;
 
-    const expr = this.normalizarEcuacion();
+    const expr = this.normalizarEcuacionMath(); // ✅ para cálculos numéricos
     if (!expr) {
       this.mensaje = 'Por favor, ingresa una ecuación válida.';
       return;
     }
 
-    if(this.maxIter <= 0) {
+    if (this.maxIter <= 0) {
       this.mensaje = 'El número máximo de iteraciones debe ser mayor que 0.';
       return;
     }
@@ -157,13 +192,14 @@ export class FalsaPosicionComponent {
       if (this.XaManual === null || this.XbManual === null) {
         this.mensaje = 'Ingresa manualmente Xa y Xb después de graficar.';
         return;
-      } else if(this.XaManual >= this.XbManual){    
+      } else if (this.XaManual >= this.XbManual) {
         this.mensaje = 'Xa tiene q ser menor que Xb';
         return;
-      }else if (f(this.XaManual) * f(this.XbManual) > 0) {   //validar que las funciones xa y xb sean menores que 0
+      } else if (f(this.XaManual) * f(this.XbManual) > 0) {
+        //validar que las funciones xa y xb sean menores que 0
         this.mensaje = 'f(Xa) y f(Xb) deben tener signos opuestos';
         return;
-    }
+      }
       Xa = this.XaManual;
       Xb = this.XbManual;
     }
@@ -171,18 +207,17 @@ export class FalsaPosicionComponent {
     let XkAnt: number | null = null;
     let error: number = 100;
 
-    
     //cálculos para los componentes de la tabla
     for (let k = 1; k <= this.maxIter && error > this.errorMax; k++) {
       const fXa: number = f(Xa);
       const fXb: number = f(Xb);
-      const Xk: number = ((Xa* fXb) - (Xb* fXa)) / (fXb-fXa);
+      const Xk: number = (Xa * fXb - Xb * fXa) / (fXb - fXa);
       const fXk: number = f(Xk);
 
       if (XkAnt !== null) {
         error = Math.abs((Xk - XkAnt) / Xk) * 100;
       } else {
-        error = Number.POSITIVE_INFINITY; 
+        error = Number.POSITIVE_INFINITY;
       }
 
       this.resultados.push({
@@ -197,7 +232,6 @@ export class FalsaPosicionComponent {
         error: error.toFixed(9),
       });
 
-      
       //condiciones de cambios del valor del intervalo
       if (fXa * fXk < 0) {
         Xb = Xk;
