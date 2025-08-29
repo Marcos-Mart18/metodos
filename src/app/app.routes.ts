@@ -8,6 +8,7 @@ import { BiseccionComponent } from './sesion2/biseccion/biseccion.component';
 import { FalsaPosicionComponent } from './sesion2/falsa-posicion/falsa-posicion.component';
 import { Sesion3Component } from './sesion3/sesion3.component';
 import { PuntoFijoComponent } from './sesion3/punto-fijo/punto-fijo.component';
+import { NewtonComponent } from './sesion3/newton/newton.component';
 
 export const routes: Routes = [
   {
@@ -50,6 +51,10 @@ export const routes: Routes = [
   {
     path: 'punto-fijo',
     component: PuntoFijoComponent,
+  },
+  {
+    path: 'newton',
+    component: NewtonComponent,
   },
   {
     path: '**',
