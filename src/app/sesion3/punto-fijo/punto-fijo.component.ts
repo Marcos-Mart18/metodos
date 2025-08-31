@@ -50,7 +50,7 @@ export class PuntoFijoComponent implements OnInit {
         width: 700,
         height: 500,
         showToolBar: false,
-        showAlgebraInput: true,
+        showAlgebraInput: false,
         showMenuBar: false,
       },
       true
@@ -155,6 +155,23 @@ export class PuntoFijoComponent implements OnInit {
     ggbApplet.evalCommand(`f(x)=${expr}`);
   }
 
+  private plotApproxPoint(x: number) {
+    try {
+      if (typeof ggbApplet === 'undefined' || !isFinite(x)) return;
+
+      if (ggbApplet.exists?.('P')) {
+        ggbApplet.deleteObject('P');
+      }
+
+      ggbApplet.evalCommand(`P = (${x}, 0)`);
+
+      ggbApplet.setPointSize?.('P', 7);
+      ggbApplet.setColor?.('P', 0, 102, 204);
+      ggbApplet.setLabelVisible?.('P', true);
+      ggbApplet.setLabelStyle?.('P', 1);
+    } catch {}
+  }
+
   resolver() {
     this.resultados = [];
     this.actualizarPaginacion();
@@ -188,6 +205,12 @@ export class PuntoFijoComponent implements OnInit {
     if (ok) {
       this.despejeGanador = g;
       this.plotOriginal();
+
+      const last = this.resultados[this.resultados.length - 1];
+      const gx = Number(String(last?.gxk ?? '').replace(',', '.'));
+      const xk = Number(String(last?.xk ?? '').replace(',', '.'));
+      const xApprox = isFinite(gx) ? gx : xk;
+      this.plotApproxPoint(xApprox);
     } else {
       this.mensaje = 'No se logró convergencia con el despeje seleccionado en el número de iteraciones dado.';
     }
@@ -223,6 +246,13 @@ export class PuntoFijoComponent implements OnInit {
       if (ok) {
         this.despejeGanador = g;
         this.idxDespejeSeleccionado = i;
+
+        const last = this.resultados[this.resultados.length - 1];
+        const gx = Number(String(last?.gxk ?? '').replace(',', '.'));
+        const xk = Number(String(last?.xk ?? '').replace(',', '.'));
+        const xApprox = isFinite(gx) ? gx : xk;
+        this.plotApproxPoint(xApprox);
+
         break;
       }
     }
@@ -237,11 +267,11 @@ export class PuntoFijoComponent implements OnInit {
   // ===== iteratividad de la tabla =====
   private iterarConG(g: Despeje): boolean {
     const gfun = (x: number) => math.evaluate(g.expr, { x, log: Math.log });
-  
+
     let X_prev = this.x0 as number;
     let X_ante: number | null = null;
     const rows: Array<{ it: number; xk: string; gxk: string; err: string }> = [];
-  
+
     for (let k = 0; k < this.maxIter; k++) {
       let X_curr: number;
       try {
@@ -250,8 +280,8 @@ export class PuntoFijoComponent implements OnInit {
       } catch {
         return false;
       }
-      
-      //Error relativo porcentual
+
+      // Error relativo porcentual: |x_k - x_{k-1}| / |x_k| * 100 (k>=1)
       let err: number;
       if (k === 0) {
         err = Number.POSITIVE_INFINITY;
@@ -259,30 +289,29 @@ export class PuntoFijoComponent implements OnInit {
         const denom = Math.abs(X_prev) > 1e-12 ? Math.abs(X_prev) : 1e-12;
         err = Math.abs((X_prev - (X_ante as number)) / denom) * 100;
       }
-  
-      // ===== componentes de la tabla =====
+
+      // Fila
       rows.push({
         it: k,
-        xk: X_prev.toFixed(9),
-        gxk: X_curr.toFixed(9),
+        xk: X_prev.toFixed(9),   // x_k
+        gxk: X_curr.toFixed(9),  // x_{k+1} = g(x_k)
         err: isFinite(err) ? err.toFixed(9) : "Infinity",
       });
-  
+
       if (k > 0 && err <= this.errorMax) {
         this.resultados = rows;
         this.actualizarPaginacion();
         return true;
       }
-  
+
       X_ante = X_prev;
       X_prev = X_curr;
     }
-  
+
     this.resultados = rows;
     this.actualizarPaginacion();
     return false;
   }
-  
 
   actualizarPaginacion() {
     this.totalPaginas = Math.ceil(this.resultados.length / this.itemsPorPagina) || 1;
