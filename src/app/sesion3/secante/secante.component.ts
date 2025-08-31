@@ -39,7 +39,7 @@ export class SecanteComponent implements OnInit {
         width: 700,
         height: 500,
         showToolBar: false,
-        showAlgebraInput: true,
+        showAlgebraInput: false,
         showMenuBar: false,
       },
       true
@@ -142,13 +142,12 @@ export class SecanteComponent implements OnInit {
       // Error relativo porcentual
       let error: number;
       if (isFinite(xCurr) && xCurr !== 0) {
-        error = Math.abs((xCurr - xPrev) / xCurr) * 100; //xCurr = xk actual, XPrev = Xk anterior
+        error = Math.abs((xCurr - xPrev) / xCurr) * 100; // xCurr = xk actual, xPrev = xk anterior
       } else {
         error = Math.abs(xCurr - xPrev) * 100;
       }
   
       const denom = fxCurr - fxPrev;
-
       if (!isFinite(denom) || Math.abs(denom) < Number.EPSILON) {
         this.mensaje = 'f(Xk) - f(Xk-1) ≈ 0. No se puede continuar (división por cero).';
         this.resultados.push({
@@ -160,7 +159,7 @@ export class SecanteComponent implements OnInit {
         break;
       }
       
-      //Formula para hallar Xk+1
+      // Fórmula para hallar Xk+1
       const xNext = xCurr - (fxCurr * (xCurr - xPrev)) / denom;
   
       this.resultados.push({
@@ -189,10 +188,16 @@ export class SecanteComponent implements OnInit {
   
     this.actualizarPaginacion();
     if (!this.mensaje) this.mensaje = null;
+
+    if (typeof ggbApplet !== 'undefined' && this.resultados.length > 0) {
+      const last = this.resultados[this.resultados.length - 1];
+      const maybeXk1 = Number(String(last.xk1).replace(',', '.'));
+      const maybeXk  = Number(String(last.xk ).replace(',', '.'));
+      const xApprox = Number.isFinite(maybeXk1) ? maybeXk1 : maybeXk;
+      if (Number.isFinite(xApprox)) this.plotApproxPoint(xApprox);
+    }
   }
   
-  
-
   actualizarPaginacion() {
     this.totalPaginas = Math.ceil(this.resultados.length / this.itemsPorPagina) || 1;
     this.resultadosPaginados = this.resultados.slice(
@@ -205,5 +210,22 @@ export class SecanteComponent implements OnInit {
     if (pagina < 1 || pagina > this.totalPaginas) return;
     this.paginaActual = pagina;
     this.actualizarPaginacion();
+  }
+
+  private plotApproxPoint(x: number) {
+    try {
+      if (typeof ggbApplet === 'undefined' || !isFinite(x)) return;
+
+      if (ggbApplet.exists?.('P')) {
+        ggbApplet.deleteObject('P');
+      }
+
+      ggbApplet.evalCommand(`P = (${x}, 0)`);
+
+      ggbApplet.setPointSize?.('P', 7);
+      ggbApplet.setColor?.('P', 0, 102, 204);
+      ggbApplet.setLabelVisible?.('P', true);
+      ggbApplet.setLabelStyle?.('P', 1);
+    } catch {}
   }
 }
