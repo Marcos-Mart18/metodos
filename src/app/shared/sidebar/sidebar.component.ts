@@ -8,7 +8,7 @@ import { Router, RouterLink } from '@angular/router';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
-export class SidebarComponent {
+export class SidebarComponent{
   unidades = [
     {
       nombre: 'Unidad 1',

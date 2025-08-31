@@ -11,7 +11,7 @@ declare var ggbApplet: any;
 declare var MathJax: any;
 
 type Despeje = {
-  expr: string;      // expresión de g(x)
+  expr: string;
   mostrar: string;
   latex: string;
   nota?: string;
@@ -234,15 +234,15 @@ export class PuntoFijoComponent implements OnInit {
     this.renderMathJax();
   }
 
-  // ===== iteratividad =====
+  // ===== iteratividad de la tabla =====
   private iterarConG(g: Despeje): boolean {
     const gfun = (x: number) => math.evaluate(g.expr, { x, log: Math.log });
-
+  
     let X_prev = this.x0 as number;
     let X_ante: number | null = null;
     const rows: Array<{ it: number; xk: string; gxk: string; err: string }> = [];
-
-    for (let k = 1; k <= this.maxIter; k++) {
+  
+    for (let k = 0; k < this.maxIter; k++) {
       let X_curr: number;
       try {
         X_curr = gfun(X_prev);
@@ -250,15 +250,16 @@ export class PuntoFijoComponent implements OnInit {
       } catch {
         return false;
       }
-
+      
+      //Error relativo porcentual
       let err: number;
-      if (k === 1) {
+      if (k === 0) {
         err = Number.POSITIVE_INFINITY;
       } else {
         const denom = Math.abs(X_prev) > 1e-12 ? Math.abs(X_prev) : 1e-12;
         err = Math.abs((X_prev - (X_ante as number)) / denom) * 100;
       }
-      
+  
       // ===== componentes de la tabla =====
       rows.push({
         it: k,
@@ -266,21 +267,22 @@ export class PuntoFijoComponent implements OnInit {
         gxk: X_curr.toFixed(9),
         err: isFinite(err) ? err.toFixed(9) : "Infinity",
       });
-
-      if (k > 1 && err <= this.errorMax) {
+  
+      if (k > 0 && err <= this.errorMax) {
         this.resultados = rows;
         this.actualizarPaginacion();
         return true;
       }
-
+  
       X_ante = X_prev;
       X_prev = X_curr;
     }
-
+  
     this.resultados = rows;
     this.actualizarPaginacion();
     return false;
   }
+  
 
   actualizarPaginacion() {
     this.totalPaginas = Math.ceil(this.resultados.length / this.itemsPorPagina) || 1;

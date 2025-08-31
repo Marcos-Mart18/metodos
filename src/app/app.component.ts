@@ -1,17 +1,42 @@
-import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit, AfterViewInit, Inject, PLATFORM_ID, NgZone } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { initFlowbite } from 'flowbite';
 import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { NavbarComponent } from './shared/navbar/navbar.component';
+import { isPlatformBrowser } from '@angular/common';
+import { filter } from 'rxjs/operators';
+
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet,SidebarComponent,NavbarComponent],
+  standalone: true,
+  imports: [RouterOutlet, SidebarComponent, NavbarComponent],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.css']
 })
-export class AppComponent implements OnInit {
+export class AppComponent implements OnInit, AfterViewInit {
   title = 'metodoNumericoApp';
+
+  constructor(
+    private router: Router,
+    private zone: NgZone,
+    @Inject(PLATFORM_ID) private platformId: Object
+  ) {}
+
+  private reinitFlowbite() {
+    if (isPlatformBrowser(this.platformId)) {
+      this.zone.onStable.subscribe(() => {
+        setTimeout(() => initFlowbite(), 0);
+      });
+    }
+  }
+
   ngOnInit(): void {
-    initFlowbite();
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationEnd))
+      .subscribe(() => this.reinitFlowbite());
+  }
+
+  ngAfterViewInit(): void {
+    this.reinitFlowbite();
   }
 }
