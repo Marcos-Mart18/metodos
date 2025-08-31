@@ -1,0 +1,167 @@
+<div>
+  <a
+    routerLink="/sesion3"
+    class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .77-1.64L7.14 13H19a1 1 0 0 0 0-2z"/>
+    </svg>
+    <span>Volver</span>
+  </a>
+</div>
+
+<!-- Contenedor principal -->
+<div class="max-w-6xl mx-auto mt-6 px-4 space-y-6">
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+    <h2 class="text-xl font-bold mb-4 text-[#001C48]">Método de la Secante</h2>
+
+    <!-- Inputs de ecuación, x0, x1, error e iteraciones -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-[#001C48]">Ecuación f(x)</label>
+        <input
+          [(ngModel)]="ecuacion"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="text"
+          placeholder="Ej: x^3 - x - 2"
+        />
+
+        <div class="mt-2 grid grid-cols-6 gap-2 text-sm">
+          <button (click)="insertar('^')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">^</button>
+          <button (click)="insertar('sqrt()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">√</button>
+          <button (click)="insertar('pi')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">π</button>
+          <button (click)="insertar('sin()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">sin</button>
+          <button (click)="insertar('cos()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">cos</button>
+          <button (click)="insertar('tan()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">tan</button>
+        </div>
+
+        <div *ngIf="mensaje" class="mt-4 p-3 rounded-lg bg-yellow-100 text-yellow-800 border border-yellow-300">
+          {{ mensaje }}
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Valor inicial X₀</label>
+        <input
+          [(ngModel)]="x0"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 1"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Valor inicial X₁</label>
+        <input
+          [(ngModel)]="x1"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 2"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Error máximo (%)</label>
+        <input
+          [(ngModel)]="errorMax"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 0.01"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Iteraciones</label>
+        <input
+          [(ngModel)]="maxIter"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 50"
+        />
+      </div>
+    </div>
+
+    <!-- Botón calcular -->
+    <button
+      (click)="resolver()"
+      class="mt-2 inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+    >
+      Calcular
+    </button>
+  </div>
+
+  <!-- Gráfico -->
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col items-center w-full max-w-full overflow-x-auto">
+    <h3 class="text-lg font-bold mb-4 text-[#001C48] text-center">Gráfico de la función</h3>
+    <div id="ggb-element" class="w-full max-w-full md:w-3/4 h-[400px] rounded-lg"></div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+    <h3 class="text-lg font-bold mb-4 text-[#001C48]">Resultados</h3>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left text-[#001C48] min-w-[600px]">
+        <thead class="text-xs bg-gray-100 border-b border-gray-300">
+          <tr>
+            <th class="px-4 py-3">Iteración</th>
+            <th class="px-4 py-3">Xk</th>
+            <th class="px-4 py-3" data-popover-target="popover-xk+1">Xk+1</th>
+            <th class="px-4 py-3" data-popover-target="errorPor">Error (%)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of resultadosPaginados" class="border-b hover:bg-gray-50">
+            <td class="px-4 py-3 font-medium">{{ r.iteracion }}</td>
+            <td class="px-4 py-3">{{ r.xk }}</td>
+            <td class="px-4 py-3">{{ r.xk1 }}</td>
+            <td class="px-4 py-3">{{ r.error }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="flex justify-center mt-4 flex-wrap gap-1" *ngIf="totalPaginas > 1">
+      <button
+        *ngFor="let i of [].constructor(totalPaginas); let idx = index"
+        (click)="cambiarPagina(idx + 1)"
+        [ngClass]="{
+          'bg-[#003366] text-white': paginaActual === idx + 1,
+          'bg-gray-100 text-gray-500': paginaActual !== idx + 1
+        }"
+        class="px-3 py-1 rounded hover:bg-gray-300"
+      >
+        {{ idx + 1 }}
+      </button>
+    </div>
+
+    <div *ngIf="resultados.length > 0" class="mt-4 text-[#001C48] font-semibold text-lg">
+      El resultado de la aproximación es:
+      <span class="text-[#003366]">{{ resultados[resultados.length - 1].xk1 }}</span>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- popoverss -->
+<div data-popover id="popover-xk+1" role="tooltip" class="absolute z-10 invisible inline-block w-64 text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-xs opacity-0 dark:text-gray-400 dark:border-gray-600 dark:bg-gray-800">
+  <div class="px-3 py-2 bg-gray-100 border-b border-gray-200 rounded-t-lg dark:border-gray-600 dark:bg-gray-700">
+      <h3 class="font-semibold text-gray-900 dark:text-white">El valos se obtiene:</h3>
+  </div>
+  <div class="px-3 py-2">
+      <img src="img/sesion3/Xk1Secante.png">
+  </div>
+  <div data-popper-arrow></div>
+</div>
+
+<div data-popover id="errorPor" role="tooltip" class="absolute z-10 invisible inline-block w-64 text-sm text-gray-500 transition-opacity duration-300 bg-white border border-gray-200 rounded-lg shadow-xs opacity-0 dark:text-gray-400 dark:border-gray-600 dark:bg-gray-800">
+  <div class="px-3 py-2 bg-gray-100 border-b border-gray-200 rounded-t-lg dark:border-gray-600 dark:bg-gray-700">
+      <h3 class="font-semibold text-gray-900 dark:text-white">El valor se obtiene:</h3>
+  </div>
+  <div class="px-3 py-2">
+      <img src="img/sesion2/error.png" alt="">
+  </div>
+  <div data-popper-arrow></div>
+</div>
+

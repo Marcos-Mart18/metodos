@@ -8,7 +8,7 @@ import { Router, RouterLink } from '@angular/router';
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.css',
 })
-export class SidebarComponent {
+export class SidebarComponent{
   unidades = [
     {
       nombre: 'Unidad 1',
@@ -16,7 +16,7 @@ export class SidebarComponent {
       semanas: [
         { id: 1, nombre: 'Sesión 1' },
         { id: 2, nombre: 'Sesión 2' },
-        // { id: 3, nombre: 'Sesión 3' },
+        { id: 3, nombre: 'Sesión 3' },
         // { id: 4, nombre: 'Sesión 4' }
       ],
     },
