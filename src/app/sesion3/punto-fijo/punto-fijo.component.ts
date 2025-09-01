@@ -130,9 +130,9 @@ export class PuntoFijoComponent implements OnInit {
       for (const arg of n.args) this.collectAdditiveTerms(arg, sign, out);
     } else if (n.type === 'OperatorNode' && n.op === '-') {
       if (n.args.length === 1) {
-        this.collectAdditiveTerms(n.args[0], -sign, out); // -(a)
+        this.collectAdditiveTerms(n.args[0], -sign, out); 
       } else if (n.args.length === 2) {
-        this.collectAdditiveTerms(n.args[0], sign, out);  // a - b
+        this.collectAdditiveTerms(n.args[0], sign, out);
         this.collectAdditiveTerms(n.args[1], -sign, out);
       } else {
         out.push({ node: n, sign });
@@ -405,7 +405,6 @@ export class PuntoFijoComponent implements OnInit {
     }, 0);
   }
 
-  // ===== Generador ampliado SIN fallbacks x - λ f(x) =====
   private generarDespejesDesdeIgualdad(): Despeje[] {
     // Asegura forma F(x) = 0
     let raw = this.ecuacion.includes('=') ? this.ecuacion : `${this.ecuacion}=0`;
@@ -423,12 +422,10 @@ export class PuntoFijoComponent implements OnInit {
       gs.push({ expr: gRaw, mostrar: gRaw, latex: node.toTex(), nota });
     };
 
-    // Casos explícitos: x = RHS o LHS = x
     if (this.isSymbolX(lhs)) pushXeq(rhsRaw, 'Explícito: x = RHS');
     if (this.isSymbolX(rhs)) pushXeq(lhsRaw, 'Explícito: x = LHS');
     if (gs.length > 0) return uniqByExpr(gs);
 
-    // Construye F(x) = lhs - rhs
     const F = math.parse(`(${lhsRaw}) - (${rhsRaw})`);
 
     // Aísla x si F(x) es lineal en x a nivel suma/resta: coefX*x + (otros) = 0
