@@ -22,8 +22,17 @@ export class SecanteComponent implements OnInit {
   errorMax: number = 0;
   maxIter: number = 0;
 
-  resultados: Array<{ iteracion: number; xk: string; xk1: string; error: string }> = [];
-
+  resultados: Array<{
+    iteracion: number;
+    xkPrev: string;     // Agregado para Xₖ₋₁
+    xk: string;         // Agregado para Xₖ
+    fxPrev: string;     // Agregado para f(Xₖ₋₁)
+    fxCurr: string;     // Agregado para f(Xₖ)
+    xk1: string;        // Agregado para Xₖ₊₁
+    fxNext: string;     // Agregado para f(Xₖ₊₁)
+    error: string;      // Agregado para el error
+  }> = [];
+  
   paginaActual: number = 1;
   resultadosPaginados: any[] = [];
   itemsPorPagina: number = 10;
@@ -82,18 +91,22 @@ export class SecanteComponent implements OnInit {
       this.mensaje = 'Por favor, ingresa una ecuación válida.';
       return;
     }
+  
     if (this.x0 === null || this.x1 === null) {
       this.mensaje = 'Debes ingresar X₀ y X₁.';
       return;
     }
+  
     if (this.x0 === this.x1) {
       this.mensaje = 'X₀ y X₁ no deben ser iguales.';
       return;
     }
+  
     if (this.maxIter <= 0) {
       this.mensaje = 'El número máximo de iteraciones debe ser mayor que 0.';
       return;
     }
+  
     if (this.errorMax <= 0) {
       this.mensaje = 'El error máximo debe ser mayor que 0.';
       return;
@@ -107,65 +120,54 @@ export class SecanteComponent implements OnInit {
       ggbApplet.evalCommand(`f(x)=${this.normalizarEcuacionGeoGebra()}`);
     }
   
-    let xPrev = this.x0;
-    let xCurr = this.x1;
+    let xPrev = this.x0;  // Xₖ₋₁ será igual a X₀
+    let xCurr = this.x1;  // Xₖ será igual a X₁ (para la primera iteración)
   
-    const fx0 = f(xPrev);
-    if (!isFinite(fx0)) {
-      this.mensaje = 'La función no está definida en X₀.';
+    let fxPrev = f(xPrev);
+    let fxCurr = f(xCurr);
+  
+    if (!isFinite(fxPrev) || !isFinite(fxCurr)) {
+      this.mensaje = 'La función no está definida en X₀ o X₁.';
       return;
     }
   
-    this.resultados.push({
-      iteracion: 0,
-      xk: Number(xPrev).toFixed(9),
-      xk1: '—',
-      error: 'Infinity'
-    });
-  
     // Iteraciones k >= 1
     for (let k = 1; k <= this.maxIter; k++) {
-      const fxPrev = f(xPrev);
-      const fxCurr = f(xCurr);
+      const denom = fxCurr - fxPrev;
   
       if (!isFinite(fxPrev) || !isFinite(fxCurr)) {
         this.mensaje = 'La función no está definida en algún punto evaluado.';
         this.resultados.push({
           iteracion: k,
-          xk: Number(xCurr).toFixed(9),
+          xkPrev: Number(xPrev).toFixed(9),
+          xk: '—',
+          fxPrev: fxPrev.toFixed(9),
+          fxCurr: fxCurr.toFixed(9),
           xk1: '—',
+          fxNext: '—',
           error: 'Infinity'
         });
         break;
       }
   
-      // Error relativo porcentual
+      const xNext = xCurr - (fxCurr * (xCurr - xPrev)) / denom;
+      const fxNext = f(xNext);
+  
       let error: number;
-      if (isFinite(xCurr) && xCurr !== 0) {
-        error = Math.abs((xCurr - xPrev) / xCurr) * 100; // xCurr = xk actual, xPrev = xk anterior
+      if (xCurr !== 0) {
+        error = Math.abs((xCurr - xPrev) / xCurr) * 100;
       } else {
         error = Math.abs(xCurr - xPrev) * 100;
       }
   
-      const denom = fxCurr - fxPrev;
-      if (!isFinite(denom) || Math.abs(denom) < Number.EPSILON) {
-        this.mensaje = 'f(Xk) - f(Xk-1) ≈ 0. No se puede continuar (división por cero).';
-        this.resultados.push({
-          iteracion: k,
-          xk: Number(xCurr).toFixed(9),
-          xk1: '—',
-          error: 'Infinity'
-        });
-        break;
-      }
-      
-      // Fórmula para hallar Xk+1
-      const xNext = xCurr - (fxCurr * (xCurr - xPrev)) / denom;
-  
       this.resultados.push({
         iteracion: k,
+        xkPrev: Number(xPrev).toFixed(9),
         xk: Number(xCurr).toFixed(9),
-        xk1: isFinite(xNext) ? Number(xNext).toFixed(9) : '—', 
+        fxPrev: fxPrev.toFixed(9),
+        fxCurr: fxCurr.toFixed(9),
+        xk1: isFinite(xNext) ? Number(xNext).toFixed(9) : '—',
+        fxNext: isFinite(fxNext) ? fxNext.toFixed(9) : '—',
         error: isFinite(error) ? error.toFixed(9) : 'Infinity'
       });
   
@@ -173,26 +175,26 @@ export class SecanteComponent implements OnInit {
         this.mensaje = 'Se obtuvo un valor no finito para Xₖ₊₁. Iteración detenida.';
         break;
       }
-      
-      // Criterio de paro por error
+  
       if (error <= this.errorMax) {
         this.mensaje = null;
-        xPrev = xCurr;
-        xCurr = xNext;
         break;
       }
   
+      // Actualizar los valores para la siguiente iteración
       xPrev = xCurr;
       xCurr = xNext;
+      fxPrev = fxCurr;  // f(Xₖ) se convierte en f(Xₖ₋₁) en la siguiente iteración
+      fxCurr = fxNext;  // f(Xₖ₋₁) se convierte en f(Xₖ) en la siguiente iteración
     }
   
     this.actualizarPaginacion();
     if (!this.mensaje) this.mensaje = null;
-
+  
     if (typeof ggbApplet !== 'undefined' && this.resultados.length > 0) {
       const last = this.resultados[this.resultados.length - 1];
       const maybeXk1 = Number(String(last.xk1).replace(',', '.'));
-      const maybeXk  = Number(String(last.xk ).replace(',', '.'));
+      const maybeXk = Number(String(last.xk).replace(',', '.'));
       const xApprox = Number.isFinite(maybeXk1) ? maybeXk1 : maybeXk;
       if (Number.isFinite(xApprox)) this.plotApproxPoint(xApprox);
     }
