@@ -11,13 +11,11 @@ declare var ggbApplet: any;
 declare var MathJax: any;
 
 type Despeje = {
-  expr: string;
+  expr: string;      // expresión de g(x)
   mostrar: string;
   latex: string;
   nota?: string;
 };
-
-type ResultRow = { it: number; xk: string; gxk: string; err: string };
 
 @Component({
   selector: 'app-punto-fijo',
@@ -32,7 +30,6 @@ export class PuntoFijoComponent implements OnInit {
   maxIter: number = 0;
 
   mensaje: string | null = null;
-  convergio = false;
 
   ggbApp: any;
 
@@ -40,8 +37,8 @@ export class PuntoFijoComponent implements OnInit {
   idxDespejeSeleccionado: number = -1;
   despejeGanador: Despeje | null = null;
 
-  resultados: ResultRow[] = [];
-  resultadosPaginados: ResultRow[] = [];
+  resultados: Array<{ it: number; xk: string; gxk: string; err: string }> = [];
+  resultadosPaginados: typeof this.resultados = [];
   paginaActual: number = 1;
   itemsPorPagina: number = 10;
   totalPaginas: number = 1;
@@ -53,7 +50,7 @@ export class PuntoFijoComponent implements OnInit {
         width: 700,
         height: 500,
         showToolBar: false,
-        showAlgebraInput: false,
+        showAlgebraInput: true,
         showMenuBar: false,
       },
       true
@@ -65,6 +62,7 @@ export class PuntoFijoComponent implements OnInit {
     this.ecuacion = (this.ecuacion || '') + simbolo;
   }
 
+  // ===== Normalizaciones =====
   private fParaMath(): string {
     if (!this.ecuacion) return '';
     let e = this.ecuacion.replace(/ln\(([^()]*)\)/g, 'log($1)');
@@ -82,13 +80,21 @@ export class PuntoFijoComponent implements OnInit {
       return null;
     }
   }
-  private nodeToString(n: any): string | undefined {
+  private nodeToString(n: any): string {
     return n?.toString({ parenthesis: 'auto' });
   }
   private nodeIsX(n: any): boolean {
     return n?.type === 'SymbolNode' && n.name === 'x';
   }
-
+  private nodeIsConst(n: any): boolean {
+    return n?.type === 'ConstantNode';
+  }
+  private nodeIsPow(n: any): boolean {
+    return n?.type === 'OperatorNode' && n.op === '^';
+  }
+  private nodeIsMul(n: any): boolean {
+    return n?.type === 'OperatorNode' && n.op === '*';
+  }
   private containsX(n: any): boolean {
     let ok = false;
     n?.traverse?.((m: any) => {
@@ -97,67 +103,16 @@ export class PuntoFijoComponent implements OnInit {
     return ok;
   }
 
-  private unwrapParen(n: any): any {
-    return n && n.type === 'ParenthesisNode' ? this.unwrapParen(n.content) : n;
-  }
-
-  private isSymbolX(n: any): boolean {
-    const m = this.unwrapParen(n);
-    return m?.type === 'SymbolNode' && m.name === 'x';
-  }
-
-  private isNumericConst(n: any): boolean {
-    const m = this.unwrapParen(n);
-    return m?.type === 'ConstantNode' && !isNaN(Number(m.value));
-  }
-
-  private isConstTimesX(n: any): { ok: boolean; a: number } {
-    const m = this.unwrapParen(n);
-    if (!m || m.type !== 'OperatorNode' || m.op !== '*') return { ok: false, a: 0 };
-    const args = m.args || [];
-    if (args.length !== 2) return { ok: false, a: 0 };
-    const A = this.unwrapParen(args[0]);
-    const B = this.unwrapParen(args[1]);
-    if (this.isNumericConst(A) && this.isSymbolX(B)) return { ok: true, a: Number(A.value) };
-    if (this.isNumericConst(B) && this.isSymbolX(A)) return { ok: true, a: Number(B.value) };
-    return { ok: false, a: 0 };
-  }
-
-  private collectAdditiveTerms(node: any, sign = 1, out: Array<{ node: any; sign: number }> = []) {
-    const n = this.unwrapParen(node);
-    if (!n) return out;
-    if (n.type === 'OperatorNode' && n.op === '+') {
-      for (const arg of n.args) this.collectAdditiveTerms(arg, sign, out);
-    } else if (n.type === 'OperatorNode' && n.op === '-') {
-      if (n.args.length === 1) {
-        this.collectAdditiveTerms(n.args[0], -sign, out); 
-      } else if (n.args.length === 2) {
-        this.collectAdditiveTerms(n.args[0], sign, out);
-        this.collectAdditiveTerms(n.args[1], -sign, out);
-      } else {
-        out.push({ node: n, sign });
-      }
-    } else {
-      out.push({ node: n, sign });
-    }
-    return out;
-  }
-
-  private nodeStr(n: any): string {
-    const m = this.unwrapParen(n);
-    return m?.toString({ parenthesis: 'auto' });
-  }
-
+  // ===== UI principales =====
   generarDespejes() {
     this.despejes = [];
     this.idxDespejeSeleccionado = -1;
     this.despejeGanador = null;
     this.resultados = [];
-    this.convergio = false;
     this.actualizarPaginacion();
 
     if (!this.ecuacion) {
-      this.mensaje = 'Por favor, ingresa una ecuación (ejemplo: x^2=2 o x^2-2).';
+      this.mensaje = "Por favor, ingresa una ecuación (ejemplo: x^2=2 o x^2-2).";
       return;
     }
     this.mensaje = null;
@@ -165,11 +120,19 @@ export class PuntoFijoComponent implements OnInit {
     this.despejes = this.generarDespejesDesdeIgualdad();
 
     if (this.despejes.length === 0) {
-      this.mensaje = 'No se pudo aislar x en una forma x = g(x). No es posible iterar.';
-      return;
+      const f = this.fParaMath();
+      [1, 0.5, 0.2, 0.1].forEach((lam) => {
+        const node = math.parse(`x - (${lam})*(${f})`);
+        this.despejes.push({
+          expr: `x - (${lam})*(${f})`,
+          mostrar: `x - ${lam}·f(x)`,
+          latex: node.toTex(),
+          nota: 'Fallback genérico'
+        });
+      });
     }
+    if (this.despejes.length > 0) this.idxDespejeSeleccionado = 0;
 
-    this.idxDespejeSeleccionado = 0;
     this.renderMathJax();
   }
 
@@ -178,6 +141,7 @@ export class PuntoFijoComponent implements OnInit {
     this.renderMathJax();
   }
 
+  // ===== Graficado =====
   private plotOriginal() {
     if (typeof ggbApplet === 'undefined') return;
     ggbApplet.reset();
@@ -187,32 +151,17 @@ export class PuntoFijoComponent implements OnInit {
       const [lhs, rhs] = expr.split('=');
       expr = `(${lhs.trim()}) - (${rhs.trim()})`;
     }
+
     ggbApplet.evalCommand(`f(x)=${expr}`);
-  }
-
-  private plotApproxPoint(x: number) {
-    try {
-      if (typeof ggbApplet === 'undefined' || !isFinite(x)) return;
-
-      if (ggbApplet.exists?.('P')) {
-        ggbApplet.deleteObject('P');
-      }
-      ggbApplet.evalCommand(`P = (${x}, 0)`);
-      ggbApplet.setPointSize?.('P', 7);
-      ggbApplet.setColor?.('P', 0, 102, 204);
-      ggbApplet.setLabelVisible?.('P', true);
-      ggbApplet.setLabelStyle?.('P', 1);
-    } catch {}
   }
 
   resolver() {
     this.resultados = [];
-    this.convergio = false;
     this.actualizarPaginacion();
     this.despejeGanador = null;
 
     if (!this.ecuacion) {
-      this.mensaje = 'Por favor, ingresa una ecuación.';
+      this.mensaje = "Por favor, ingresa una ecuación.";
       return;
     }
     if (this.x0 === null || isNaN(this.x0)) {
@@ -227,11 +176,6 @@ export class PuntoFijoComponent implements OnInit {
       this.mensaje = 'El error máximo debe ser mayor que 0.';
       return;
     }
-
-    if (this.despejes.length === 0) {
-      this.mensaje = 'No se pudo aislar x en una forma x = g(x). No es posible iterar.';
-      return;
-    }
     if (this.idxDespejeSeleccionado < 0 || this.idxDespejeSeleccionado >= this.despejes.length) {
       this.mensaje = 'Primero detecta y selecciona un despeje.';
       return;
@@ -240,21 +184,10 @@ export class PuntoFijoComponent implements OnInit {
     this.mensaje = null;
 
     const g = this.despejes[this.idxDespejeSeleccionado];
-    const { success, rows } = this.iterarConG(g);
-
-    this.resultados = rows;
-    this.actualizarPaginacion();
-
-    if (success) {
-      this.convergio = true;
+    const ok = this.iterarConG(g);
+    if (ok) {
       this.despejeGanador = g;
       this.plotOriginal();
-
-      const last = this.resultados[this.resultados.length - 1];
-      const gx = Number(String(last?.gxk ?? '').replace(',', '.'));
-      const xk = Number(String(last?.xk ?? '').replace(',', '.'));
-      const xApprox = isFinite(gx) ? gx : xk;
-      this.plotApproxPoint(xApprox);
     } else {
       this.mensaje = 'No se logró convergencia con el despeje seleccionado en el número de iteraciones dado.';
     }
@@ -263,12 +196,11 @@ export class PuntoFijoComponent implements OnInit {
 
   probarTodos() {
     this.resultados = [];
-    this.convergio = false;
     this.actualizarPaginacion();
     this.despejeGanador = null;
 
     if (!this.ecuacion) {
-      this.mensaje = 'Por favor, ingresa una ecuación.';
+      this.mensaje = "Por favor, ingresa una ecuación.";
       return;
     }
     if (this.x0 === null || isNaN(this.x0)) {
@@ -279,107 +211,75 @@ export class PuntoFijoComponent implements OnInit {
       this.mensaje = 'Revisa iteraciones y error máximo.';
       return;
     }
-
-    if (this.despejes.length === 0) {
-      this.despejes = this.generarDespejesDesdeIgualdad();
-      if (this.despejes.length === 0) {
-        this.mensaje = 'No se pudo aislar x en una forma x = g(x). No es posible iterar.';
-        return;
-      }
-    }
+    if (this.despejes.length === 0) this.generarDespejes();
 
     this.mensaje = null;
     this.plotOriginal();
 
-    let mejor: { idx: number; rows: ResultRow[]; finalError: number } | null = null;
-
     for (let i = 0; i < this.despejes.length; i++) {
       const g = this.despejes[i];
-      const r = this.iterarConG(g);
-
-      if (r.success) {
-        this.resultados = r.rows;
-        this.actualizarPaginacion();
-        this.despejeGanador = this.despejes[i];
+      this.resultados = [];
+      const ok = this.iterarConG(g);
+      if (ok) {
+        this.despejeGanador = g;
         this.idxDespejeSeleccionado = i;
-        this.convergio = true;
-        this.mensaje = `Convergió con el despeje #${i + 1} en ${r.rows.length} iteraciones (err ≈ ${r.finalError.toFixed(9)} ≤ ${this.errorMax}).`;
-
-        const last = this.resultados[this.resultados.length - 1];
-        const gx = Number(String(last?.gxk ?? '').replace(',', '.'));
-        const xk = Number(String(last?.xk ?? '').replace(',', '.'));
-        const xApprox = isFinite(gx) ? gx : xk;
-        this.plotApproxPoint(xApprox);
-
-        this.renderMathJax();
-        return;
-      }
-
-      if (!mejor || r.finalError < mejor.finalError) {
-        mejor = { idx: i, rows: r.rows, finalError: r.finalError };
+        break;
       }
     }
-
-    if (mejor) {
-      this.resultados = mejor.rows;
-      this.actualizarPaginacion();
-      this.despejeGanador = this.despejes[mejor.idx];
-      this.idxDespejeSeleccionado = mejor.idx;
-      this.mensaje = `Ningún despeje alcanzó la tolerancia. Se muestra el mejor intento (despeje #${mejor.idx + 1}) con error final ≈ ${mejor.finalError.toFixed(9)} ≥ ${this.errorMax}.`;
-    } else {
-      this.mensaje = 'No fue posible evaluar g(x) con los despejes propuestos.';
+    if (!this.despejeGanador) {
+      this.mensaje = 'Ninguno de los despejes propuestos convergió dentro del error e iteraciones especificados.';
       this.resultados = [];
       this.actualizarPaginacion();
     }
-
     this.renderMathJax();
   }
 
-  // ===== iteratividad y error correcto =====
-  private iterarConG(
-    g: Despeje
-  ): {
-    success: boolean;
-    rows: ResultRow[];
-    finalError: number;
-  } {
+  // ===== iteratividad =====
+  private iterarConG(g: Despeje): boolean {
     const gfun = (x: number) => math.evaluate(g.expr, { x, log: Math.log });
 
-    let Xk = this.x0 as number; // x_k
-    let success = false;
-    const rows: ResultRow[] = [];
-    let finalError = Number.POSITIVE_INFINITY;
+    let X_prev = this.x0 as number;
+    let X_ante: number | null = null;
+    const rows: Array<{ it: number; xk: string; gxk: string; err: string }> = [];
 
     for (let k = 1; k <= this.maxIter; k++) {
-      let Xk1: number; // x_{k+1} = g(x_k)
+      let X_curr: number;
       try {
-        Xk1 = gfun(Xk);
-        if (!isFinite(Xk1)) throw new Error('g(x) no finito');
+        X_curr = gfun(X_prev);
+        if (!isFinite(X_curr)) throw new Error('g(x) no finito');
       } catch {
-        return { success: false, rows, finalError };
+        return false;
       }
 
-      // Error relativo porcentual respecto a x_{k+1}
-      const denom = Math.max(Math.abs(Xk1), 1e-12);
-      const err = Math.abs((Xk1 - Xk) / denom) * 100;
-      finalError = err;
-
+      let err: number;
+      if (k === 1) {
+        err = Number.POSITIVE_INFINITY;
+      } else {
+        const denom = Math.abs(X_prev) > 1e-12 ? Math.abs(X_prev) : 1e-12;
+        err = Math.abs((X_prev - (X_ante as number)) / denom) * 100;
+      }
+      
+      // ===== componentes de la tabla =====
       rows.push({
         it: k,
-        xk: Xk.toFixed(9),
-        gxk: Xk1.toFixed(9),
-        err: isFinite(err) ? err.toFixed(9) : 'Infinity',
+        xk: X_prev.toFixed(9),
+        gxk: X_curr.toFixed(9),
+        err: isFinite(err) ? err.toFixed(9) : "Infinity",
       });
 
-      if (err <= this.errorMax) {
-        success = true;
-        break;
+      if (k > 1 && err <= this.errorMax) {
+        this.resultados = rows;
+        this.actualizarPaginacion();
+        return true;
       }
 
-      Xk = Xk1; // avanzar
+      X_ante = X_prev;
+      X_prev = X_curr;
     }
 
-    return { success, rows, finalError };
+    this.resultados = rows;
+    this.actualizarPaginacion();
+    return false;
   }
 
   actualizarPaginacion() {
@@ -406,10 +306,9 @@ export class PuntoFijoComponent implements OnInit {
   }
 
   private generarDespejesDesdeIgualdad(): Despeje[] {
-    // Asegura forma F(x) = 0
     let raw = this.ecuacion.includes('=') ? this.ecuacion : `${this.ecuacion}=0`;
     raw = raw.replace(/ln\(([^()]*)\)/g, 'log($1)');
-    const [lhsRaw, rhsRaw] = raw.split('=').map((s) => s.trim());
+    const [lhsRaw, rhsRaw] = raw.split('=').map(s => s.trim());
     if (!lhsRaw || !rhsRaw) return [];
 
     const lhs = this.parseSide(lhsRaw);
@@ -417,65 +316,50 @@ export class PuntoFijoComponent implements OnInit {
     if (!lhs || !rhs) return [];
 
     const gs: Despeje[] = [];
-    const pushXeq = (gRaw: string, nota = 'Reordenado: x = g(x)') => {
+
+    const pushXeq = (gRaw: string) => {
       const node = math.parse(gRaw);
-      gs.push({ expr: gRaw, mostrar: gRaw, latex: node.toTex(), nota });
+      gs.push({ expr: gRaw, mostrar: gRaw, latex: node.toTex(), nota: 'Reordenado: x = g(x)' });
     };
 
-    if (this.isSymbolX(lhs)) pushXeq(rhsRaw, 'Explícito: x = RHS');
-    if (this.isSymbolX(rhs)) pushXeq(lhsRaw, 'Explícito: x = LHS');
-    if (gs.length > 0) return uniqByExpr(gs);
-
-    const F = math.parse(`(${lhsRaw}) - (${rhsRaw})`);
-
-    // Aísla x si F(x) es lineal en x a nivel suma/resta: coefX*x + (otros) = 0
-    const terms = this.collectAdditiveTerms(F, 1, []);
-    let coefX = 0;
-    const others: Array<{ sign: number; str: string }> = [];
-
-    for (const t of terms) {
-      const n = t.node;
-
-      if (this.isSymbolX(n)) {
-        coefX += t.sign;
-        continue;
-      }
-      const cx = this.isConstTimesX(n);
-      if (cx.ok) {
-        coefX += t.sign * cx.a;
-        continue;
-      }
-      const s = this.nodeStr(n);
-      if (s) others.push({ sign: t.sign, str: s });
+    if (rhsRaw === '0' && lhs.type === 'OperatorNode' && lhs.op === '-') {
+      const [A, B] = lhs.args;
+      if (this.nodeIsX(A)) pushXeq(this.nodeToString(B)!);
+      if (this.nodeIsX(B)) pushXeq(this.nodeToString(A)!);
+    }
+    if (lhsRaw === '0' && rhs.type === 'OperatorNode' && rhs.op === '-') {
+      const [A, B] = rhs.args;
+      if (this.nodeIsX(A)) pushXeq(this.nodeToString(B)!);
+      if (this.nodeIsX(B)) pushXeq(this.nodeToString(A)!);
     }
 
-    if (coefX === 0) return []; // no se pudo aislar linealmente
+    if (this.nodeIsX(lhs)) {
+      const node = math.parse(rhsRaw);
+      gs.push({ expr: rhsRaw, mostrar: rhsRaw, latex: node.toTex(), nota: 'x = RHS' });
+    }
+    if (this.nodeIsX(rhs)) {
+      const node = math.parse(lhsRaw);
+      gs.push({ expr: lhsRaw, mostrar: lhsRaw, latex: node.toTex(), nota: 'x = LHS' });
+    }
 
-    // x = -(sum otros)/coefX
-    const parts: string[] = [];
-    for (const o of others) parts.push(o.sign === 1 ? `(${o.str})` : `-(${o.str})`);
-    const sumOthers = parts.length ? parts.join(' + ') : '0';
+    const seen = new Set<string>();
+    const uniq = gs.filter(g => {
+      const key = g.expr.replace(/\s+/g, ' ');
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
-    let gStr: string;
-    if (coefX === 1) gStr = `-(${sumOthers})`;
-    else if (coefX === -1) gStr = `(${sumOthers})`;
-    else gStr = `-(${sumOthers})/(${coefX})`;
-
-    gStr = gStr.replace(/\-\(0\)/g, '0');
-    if (gStr.trim() === 'x') return [];
-
-    pushXeq(gStr, 'Aislamiento lineal en x a nivel suma');
-
-    return uniqByExpr(gs);
-
-    function uniqByExpr(arr: Despeje[]): Despeje[] {
-      const seen = new Set<string>();
-      return arr.filter((g) => {
-        const key = g.expr.replace(/\s+/g, ' ');
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
+    // si no hay nada, añadimos los gλ(x) = x - λ f(x)
+    if (uniq.length === 0) {
+      const f = this.fParaMath();
+      [1, 0.5, 0.2, 0.1].forEach(lam => {
+        const expr = `x - (${lam})*(${f})`;
+        const node = math.parse(expr);
+        uniq.push({ expr, mostrar: expr, latex: node.toTex(), nota: 'Fallback genérico' });
       });
     }
+
+    return uniq;
   }
 }
