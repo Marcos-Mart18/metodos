@@ -7,8 +7,7 @@ import { RouterLink } from '@angular/router';
   selector: 'app-theory-error',
   standalone: true,
   imports: [NgIf, FormsModule, RouterLink],
-  templateUrl: './theory-error.component.html',
-  styleUrls: ['./theory-error.component.css'],
+  templateUrl: './theory-error.component.html'
 })
 export class TheoryErrorComponent {
   vv!: number; // valor verdadero
