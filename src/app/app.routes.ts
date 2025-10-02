@@ -10,6 +10,10 @@ import { Sesion3Component } from './sesion3/sesion3.component';
 import { PuntoFijoComponent } from './sesion3/punto-fijo/punto-fijo.component';
 import { NewtonComponent } from './sesion3/newton/newton.component';
 import { SecanteComponent } from './sesion3/secante/secante.component';
+import { Sesion1U2Component } from './sesion1-u2/sesion1-u2.component';
+import { GaussComponent } from './sesion1-u2/gauss/gauss.component';
+import { GaussJordanComponent } from './sesion1-u2/gauss-jordan/gauss-jordan.component';
+import { FactorizacionLuComponent } from './sesion1-u2/factorizacion-lu/factorizacion-lu.component';
 
 export const routes: Routes = [
   {
@@ -60,6 +64,22 @@ export const routes: Routes = [
   {
     path: 'secante',
     component: SecanteComponent,
+  },
+  {
+    path: 'sesion5',
+    component: Sesion1U2Component,
+  },
+  {
+    path: 'gauss',
+    component: GaussComponent,
+  },
+  {
+    path: 'gauss-jordan',
+    component: GaussJordanComponent,
+  },
+  {
+    path: 'factorizacionLU',
+    component: FactorizacionLuComponent,
   },
   {
     path: '**',
