@@ -1,19 +1,23 @@
 import { Routes } from '@angular/router';
 import { HomeComponent } from './home/home.component';
-import { Sesion1Component } from './sesion1/sesion1.component';
-import { TheoryErrorComponent } from './sesion1/theory-error/theory-error.component';
-import { PuntoFlotanteComponent } from './sesion1/punto-flotante/punto-flotante.component';
-import { Sesion2Component } from './sesion2/sesion2.component';
-import { BiseccionComponent } from './sesion2/biseccion/biseccion.component';
-import { FalsaPosicionComponent } from './sesion2/falsa-posicion/falsa-posicion.component';
-import { Sesion3Component } from './sesion3/sesion3.component';
-import { PuntoFijoComponent } from './sesion3/punto-fijo/punto-fijo.component';
-import { NewtonComponent } from './sesion3/newton/newton.component';
-import { SecanteComponent } from './sesion3/secante/secante.component';
-import { Sesion1U2Component } from './sesion1-u2/sesion1-u2.component';
-import { GaussComponent } from './sesion1-u2/gauss/gauss.component';
-import { GaussJordanComponent } from './sesion1-u2/gauss-jordan/gauss-jordan.component';
-import { FactorizacionLuComponent } from './sesion1-u2/factorizacion-lu/factorizacion-lu.component';
+import { Sesion1Component } from './unidad 1/sesion1/sesion1.component';
+import { TheoryErrorComponent } from './unidad 1/sesion1/theory-error/theory-error.component';
+import { PuntoFlotanteComponent } from './unidad 1/sesion1/punto-flotante/punto-flotante.component';
+import { Sesion2Component } from './unidad 1/sesion2/sesion2.component';
+import { BiseccionComponent } from './unidad 1/sesion2/biseccion/biseccion.component';
+import { FalsaPosicionComponent } from './unidad 1/sesion2/falsa-posicion/falsa-posicion.component';
+import { Sesion3Component } from './unidad 1/sesion3/sesion3.component';
+import { PuntoFijoComponent } from './unidad 1/sesion3/punto-fijo/punto-fijo.component';
+import { NewtonComponent } from './unidad 1/sesion3/newton/newton.component';
+import { SecanteComponent } from './unidad 1/sesion3/secante/secante.component';
+import { Sesion1U2Component } from './unidad 2/sesion1-u2/sesion1-u2.component';
+import { GaussComponent } from './unidad 2/sesion1-u2/gauss/gauss.component';
+import { GaussJordanComponent } from './unidad 2/sesion1-u2/gauss-jordan/gauss-jordan.component';
+import { FactorizacionLuComponent } from './unidad 2/sesion1-u2/factorizacion-lu/factorizacion-lu.component';
+import { Sesion2U2Component } from './unidad 2/sesion2-u2/sesion2-u2.component';
+import { CholeskiComponent } from './unidad 2/sesion2-u2/choleski/choleski.component';
+import { JacobiComponent } from './unidad 2/sesion2-u2/jacobi/jacobi.component';
+import { GaussSeidelComponent } from './unidad 2/sesion2-u2/gauss-seidel/gauss-seidel.component';
 
 export const routes: Routes = [
   {
@@ -80,6 +84,22 @@ export const routes: Routes = [
   {
     path: 'factorizacionLU',
     component: FactorizacionLuComponent,
+  },
+  {
+    path: 'sesion6',
+    component: Sesion2U2Component,
+  },
+  {
+    path: 'choleski',
+    component: CholeskiComponent,
+  },
+  {
+    path: 'jacobi',
+    component: JacobiComponent,
+  },
+  {
+    path: 'gauss-seidel',
+    component: GaussSeidelComponent,
   },
   {
     path: '**',
