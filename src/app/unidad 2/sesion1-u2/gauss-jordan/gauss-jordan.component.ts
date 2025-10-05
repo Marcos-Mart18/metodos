@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-gauss-jordan',
-  imports: [CommonModule, FormsModule],
-  templateUrl: './gauss-jordan.component.html'
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './gauss-jordan.component.html',
 })
 export class GaussJordanComponent {
   // Matriz aumentada (n x (n+1))
@@ -19,9 +20,9 @@ export class GaussJordanComponent {
   private readonly EPS = 1e-10;
 
   constructor() {
-    const matrix = JSON.parse(JSON.stringify(this.tempMatrix()));  // Usamos tempMatrix
+    const matrix = JSON.parse(JSON.stringify(this.tempMatrix())); // Usamos tempMatrix
     const n = matrix.length;
-    this.adjustMatrixSize(n);
+    this.adjustMatrixSize(3);
   }
 
   adjustMatrixSize(size: number): void {
@@ -39,7 +40,7 @@ export class GaussJordanComponent {
 
   // Método para clonar una matriz
   private clone(a: number[][]): number[][] {
-    return a.map(r => [...r]);
+    return a.map((r) => [...r]);
   }
 
   // Validación de inputs
@@ -47,10 +48,10 @@ export class GaussJordanComponent {
     const normalized = value.replace(/[^0-9.-]/g, '');
     if (!isNaN(Number(normalized)) || normalized === '') {
       // Copiar la matriz temporal antes de modificarla
-      const updated = [...this.tempMatrix()];  // Acceder a la señal con tempMatrix()
-      updated[row][col] = normalized === '' ? 0 : Number(normalized);  // Actualizamos el valor de la celda
-      this.tempMatrix.set(updated);  // Actualizamos la matriz temporal con el nuevo valor
-      this.message.set(null);  // Limpia cualquier mensaje de error
+      const updated = [...this.tempMatrix()]; // Acceder a la señal con tempMatrix()
+      updated[row][col] = normalized === '' ? 0 : Number(normalized); // Actualizamos el valor de la celda
+      this.tempMatrix.set(updated); // Actualizamos la matriz temporal con el nuevo valor
+      this.message.set(null); // Limpia cualquier mensaje de error
     } else {
       this.message.set('⚠ Solo se permiten números (enteros o decimales).');
     }

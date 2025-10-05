@@ -1,19 +1,41 @@
-<div class="p-6 bg-gray-100 min-h-screen flex flex-col items-center">
+<div>
+  <a
+    routerLink="/sesion5"
+    class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path
+        d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .77-1.64L7.14 13H19a1 1 0 0 0 0-2z"
+      />
+    </svg>
+    <span>Volver</span>
+  </a>
+</div>
+
+<div class="p-6 min-h-screen flex flex-col items-center">
   <!-- Encabezado -->
   <div class="w-full text-center mb-6">
     <h1 class="text-3xl font-bold text-[#001C48] mb-2">
       Solución de Sistemas de Ecuaciones Lineales
     </h1>
     <p class="text-gray-600">
-      Define el <span class="font-semibold">tamaño de la matriz</span>, ingresa los
-      <span class="font-semibold">coeficientes</span> y los
-      <span class="font-semibold">resultados</span> de cada ecuación.  
-      Haz clic en <span class="font-semibold text-[#001C48]">Resolver Sistema</span> para ver la solución.
+      Define el <span class="font-semibold">tamaño de la matriz</span>, ingresa
+      los <span class="font-semibold">coeficientes</span> y los
+      <span class="font-semibold">resultados</span> de cada ecuación. Haz clic
+      en <span class="font-semibold text-[#001C48]">Resolver Sistema</span> para
+      ver la solución.
     </p>
   </div>
 
   <!-- Tarjeta principal -->
-  <div class="p-6 w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200">
+  <div
+    class="p-6 w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200"
+  >
     <h2 class="text-xl font-bold mb-4 text-[#001C48]">Configuración</h2>
 
     <!-- Tamaño de la matriz -->
@@ -28,15 +50,17 @@
         (ngModelChange)="adjustMatrixSize($event)"
         min="2"
         max="10"
-        class="w-24 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300
-               focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none text-center"
+        class="w-24 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none text-center"
       />
     </div>
 
     <!-- Ingreso como ecuaciones: a11 x1 + a12 x2 + ... = b1 -->
     <h3 class="text-lg font-semibold text-[#001C48] mb-4">Ingresar valores</h3>
     <div class="overflow-x-auto">
-      <div *ngFor="let row of matrix(); let i = index" class="flex items-center gap-2 mb-3">
+      <div
+        *ngFor="let row of matrix(); let i = index"
+        class="flex items-center gap-2 mb-3"
+      >
         <!-- Coeficientes y términos: a_i1 x1 + a_i2 x2 + ... + a_iN xN = b_i -->
         <ng-container *ngFor="let _ of row; let j = index">
           <ng-container *ngIf="j < row.length - 1">
@@ -50,8 +74,12 @@
               inputmode="decimal"
             />
             <!-- etiqueta xk y signo + / = -->
-            <span *ngIf="j < row.length - 2" class="font-semibold">x{{ j + 1 }} +</span>
-            <span *ngIf="j === row.length - 2" class="font-semibold">x{{ j + 1 }} =</span>
+            <span *ngIf="j < row.length - 2" class="font-semibold"
+              >x{{ j + 1 }} +</span
+            >
+            <span *ngIf="j === row.length - 2" class="font-semibold"
+              >x{{ j + 1 }} =</span
+            >
           </ng-container>
         </ng-container>
 
@@ -70,11 +98,7 @@
     <!-- Botón resolver -->
     <button
       (click)="solveSystem()"
-      class="mt-6 w-full inline-flex justify-center items-center gap-2 
-             bg-gradient-to-b from-[#001C48] to-[#003366] text-white 
-             font-bold text-base px-6 py-3 rounded-lg shadow-md 
-             hover:shadow-lg hover:from-[#003366] hover:to-[#004080] 
-             hover:-translate-y-0.5 transition"
+      class="mt-6 w-full inline-flex justify-center items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-base px-6 py-3 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
     >
       Resolver Sistema
     </button>
@@ -85,8 +109,10 @@
     <div
       class="p-4 rounded-lg text-sm text-center"
       [ngClass]="{
-        'bg-green-100 text-green-800 border border-green-300': message() === 'Sistema resuelto con éxito.',
-        'bg-red-100 text-red-800 border border-red-300': message() !== 'Sistema resuelto con éxito.'
+        'bg-green-100 text-green-800 border border-green-300':
+          message() === 'Sistema resuelto con éxito.',
+        'bg-red-100 text-red-800 border border-red-300':
+          message() !== 'Sistema resuelto con éxito.'
       }"
     >
       {{ message() }}
@@ -98,8 +124,11 @@
     <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
       <h2 class="text-xl font-bold mb-4 text-[#001C48]">Resultados</h2>
       <div class="grid grid-cols-2 gap-4">
-        <p *ngFor="let sol of solutions(); let i = index" class="text-gray-800 text-lg font-medium">
-          x<sub>{{ i + 1 }}</sub> = 
+        <p
+          *ngFor="let sol of solutions(); let i = index"
+          class="text-gray-800 text-lg font-medium"
+        >
+          x<sub>{{ i + 1 }}</sub> =
           <span class="text-[#003366] font-bold">{{ sol.toFixed(4) }}</span>
         </p>
       </div>

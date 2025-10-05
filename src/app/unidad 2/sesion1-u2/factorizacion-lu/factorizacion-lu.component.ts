@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-factorizacion-lu',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './factorizacion-lu.component.html',
 })
 export class FactorizacionLuComponent {
@@ -29,7 +30,7 @@ export class FactorizacionLuComponent {
 
   // ------------- Utilidades -------------
   private clone(A: number[][]): number[][] {
-    return A.map(r => [...r]);
+    return A.map((r) => [...r]);
   }
 
   private zeros(n: number, m: number): number[][] {
@@ -38,7 +39,10 @@ export class FactorizacionLuComponent {
 
   // Normaliza entrada de texto -> número
   onInputChange(value: string, i: number, j: number): void {
-    const normalized = (value ?? '').toString().replace(/[^0-9.+\-eE]/g, '').replace(',', '.');
+    const normalized = (value ?? '')
+      .toString()
+      .replace(/[^0-9.+\-eE]/g, '')
+      .replace(',', '.');
     const num = normalized === '' ? 0 : Number(normalized);
     if (!Number.isNaN(num)) {
       const T = this.clone(this.tempMatrix());
@@ -58,7 +62,9 @@ export class FactorizacionLuComponent {
     this.tempMatrix.set(this.clone(fresh));
     this.solutions.set([]);
     this.message.set(null);
-    this.L.set([]); this.U.set([]); this.piv.set([]);
+    this.L.set([]);
+    this.U.set([]);
+    this.piv.set([]);
   }
 
   // ------------- LU con pivoteo parcial (Doolittle) -------------
@@ -114,7 +120,7 @@ export class FactorizacionLuComponent {
       let s = Pb[i];
       for (let j = 0; j < i; j++) s -= L[i][j] * y[j];
       // L tiene diagonal unitaria
-      y[i] = s; 
+      y[i] = s;
     }
     return y;
   }
@@ -152,12 +158,14 @@ export class FactorizacionLuComponent {
     if (!ok) {
       this.solutions.set([]);
       this.message.set('La matriz es singular o no tiene solución única.');
-      this.L.set([]); this.U.set([]); this.piv.set([]);
+      this.L.set([]);
+      this.U.set([]);
+      this.piv.set([]);
       return;
     }
 
     // Pb: reordenar b según pivoteo
-    const Pb = piv.map(idx => b[idx]);
+    const Pb = piv.map((idx) => b[idx]);
 
     // Resolver Ly = Pb y luego Ux = y
     const y = this.forwardSubst(L, Pb);

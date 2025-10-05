@@ -1,0 +1,232 @@
+<div>
+  <a
+    routerLink="/sesion6"
+    class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+  >
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path
+        d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .77-1.64L7.14 13H19a1 1 0 0 0 0-2z"
+      />
+    </svg>
+    <span>Volver</span>
+  </a>
+</div>
+
+<div class="p-6 min-h-screen flex flex-col items-center">
+  <div class="w-full text-center mb-6">
+    <h1 class="text-3xl font-bold text-[#001C48] mb-2">
+      Método de Gauss–Seidel
+    </h1>
+    <p class="text-gray-600">
+      Iterativo en sitio:
+      <span class="font-semibold">
+        x<sub>i</sub>^(k+1) = ( b<sub>i</sub> − Σ<sub>j&lt;i</sub>
+        a<sub>ij</sub>·x<sub>j</sub>^(k+1) − Σ<sub>j&gt;i</sub>
+        a<sub>ij</sub>·x<sub>j</sub>^(k) ) / a<sub>ii</sub> </span
+      >. Recomendado que <span class="font-semibold">A</span> sea
+      <em>diagonalmente dominante</em>.
+    </p>
+  </div>
+
+  <!-- Tarjeta principal -->
+  <div
+    class="p-6 w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200"
+  >
+    <h2 class="text-xl font-bold mb-4 text-[#001C48]">Configuración</h2>
+
+    <div class="flex flex-wrap items-center gap-4 mb-4">
+      <label class="text-sm font-medium text-[#001C48]"
+        >Número de incógnitas (N):</label
+      >
+      <input
+        type="number"
+        [ngModel]="matrix().length"
+        (ngModelChange)="adjustMatrixSize($event)"
+        min="2"
+        max="10"
+        class="w-24 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none text-center"
+      />
+
+      <label class="text-sm font-medium text-[#001C48] ml-2"
+        >Tolerancia (ε):</label
+      >
+      <input
+        type="text"
+        [ngModel]="tol()"
+        (ngModelChange)="onTolChange($event)"
+        class="w-28 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 text-center"
+        [attr.placeholder]="1e-6"
+        inputmode="decimal"
+      />
+
+      <label class="text-sm font-medium text-[#001C48] ml-2"
+        >Máx. iteraciones:</label
+      >
+      <input
+        type="number"
+        [ngModel]="maxIter()"
+        (ngModelChange)="onMaxIterChange($event)"
+        min="1"
+        max="10000"
+        class="w-28 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 text-center"
+      />
+    </div>
+
+    <!-- x0 -->
+    <h3 class="text-lg font-semibold text-[#001C48] mb-2">Vector inicial x₀</h3>
+    <div class="flex flex-wrap gap-2 mb-4">
+      <ng-container *ngFor="let _ of x0(); let i = index">
+        <input
+          type="text"
+          [ngModel]="x0()[i]"
+          (ngModelChange)="onX0Change($event, i)"
+          class="w-20 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 text-center"
+          [attr.placeholder]="'x0' + (i + 1)"
+          inputmode="decimal"
+        />
+      </ng-container>
+    </div>
+
+    <!-- Ingreso A|b -->
+    <h3 class="text-lg font-semibold text-[#001C48] mb-2">Ingresar A y b</h3>
+    <div class="overflow-x-auto">
+      <div
+        *ngFor="let row of matrix(); let i = index"
+        class="flex items-center gap-2 mb-3"
+      >
+        <ng-container *ngFor="let _ of row; let j = index">
+          <ng-container *ngIf="j < row.length - 1">
+            <input
+              type="text"
+              [ngModel]="tempMatrix()[i][j]"
+              (ngModelChange)="onInputChange($event, i, j)"
+              class="w-16 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 text-center"
+              [attr.placeholder]="'a' + (i + 1) + (j + 1)"
+              inputmode="decimal"
+            />
+            <span
+              *ngIf="j < row.length - 2"
+              class="font-semibold"
+              [textContent]="'x' + (j + 1) + ' +'"
+            ></span>
+            <span
+              *ngIf="j === row.length - 2"
+              class="font-semibold"
+              [textContent]="'x' + (j + 1) + ' ='"
+            ></span>
+          </ng-container>
+        </ng-container>
+        <input
+          type="text"
+          [ngModel]="tempMatrix()[i][row.length - 1]"
+          (ngModelChange)="onInputChange($event, i, row.length - 1)"
+          class="w-20 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 text-center font-semibold"
+          [attr.placeholder]="'b' + (i + 1)"
+          inputmode="decimal"
+        />
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="mt-4 flex flex-wrap gap-3">
+      <button
+        (click)="solveGS()"
+        class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-base px-6 py-3 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+      >
+        Resolver
+      </button>
+      <button
+        (click)="fillExample()"
+        class="inline-flex items-center gap-2 bg-gray-100 text-[#001C48] font-semibold text-base px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-200 transition"
+      >
+        Cargar ejemplo
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensajes -->
+  <div *ngIf="message()" class="mt-4 w-full max-w-3xl">
+    <div class="p-4 rounded-lg text-sm text-center" [class]="messageClass()">
+      <span [innerText]="message()"></span>
+    </div>
+  </div>
+
+  <!-- Diagnóstico -->
+  <div *ngIf="diagDominant() !== null" class="mt-4 w-full max-w-3xl">
+    <div class="p-4 bg-white rounded-2xl shadow border border-gray-200">
+      <h3 class="text-md font-semibold text-[#001C48] mb-2">Diagnóstico</h3>
+      <p class="text-sm text-gray-800">
+        Dominancia diagonal:
+        <span
+          [class]="
+            diagDominant()
+              ? 'text-green-700 font-semibold'
+              : 'text-orange-700 font-semibold'
+          "
+          [textContent]="
+            diagDominant()
+              ? 'Sí (recomendado)'
+              : 'No estricta (podría no converger)'
+          "
+        ></span>
+      </p>
+    </div>
+  </div>
+
+  <!-- Resultado -->
+  <div *ngIf="solution().length > 0" class="mt-6 w-full max-w-3xl">
+    <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+      <h2 class="text-xl font-bold mb-4 text-[#001C48]">Resultado</h2>
+      <div class="grid grid-cols-2 gap-4">
+        <p
+          *ngFor="let v of solution(); let i = index"
+          class="text-gray-800 text-lg font-medium"
+        >
+          x<sub [textContent]="i + 1"></sub> =
+          <span
+            class="text-[#003366] font-bold"
+            [textContent]="v | number : '1.6-6'"
+          ></span>
+        </p>
+      </div>
+
+      <!-- Tabla de iteraciones -->
+      <div class="mt-6">
+        <h3 class="text-md font-semibold text-[#001C48] mb-2">
+          Bitácora de iteraciones
+        </h3>
+        <div class="overflow-x-auto">
+          <table class="min-w-full border border-gray-200 rounded-lg text-sm">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-3 py-2 text-left">k</th>
+                <th
+                  class="px-3 py-2"
+                  *ngFor="let _ of solution(); let i = index"
+                  [textContent]="'x' + (i + 1)"
+                ></th>
+                <th class="px-3 py-2">‖Δx‖∞ / ‖x‖∞</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let it of iterations()">
+                <td class="px-3 py-2" [textContent]="it.k"></td>
+                <td class="px-3 py-2 text-center" *ngFor="let xi of it.x">
+                  <span [textContent]="xi | number : '1.6-6'"></span>
+                </td>
+                <td class="px-3 py-2 text-center">
+                  <span [textContent]="it.err | number : '1.2-6'"></span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

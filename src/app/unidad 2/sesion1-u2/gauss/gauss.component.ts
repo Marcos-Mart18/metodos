@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-gauss',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, RouterLink],
   templateUrl: './gauss.component.html',
 })
 export class GaussComponent {
@@ -27,13 +28,16 @@ export class GaussComponent {
 
   // ===== Utils =====
   private clone(A: number[][]): number[][] {
-    return A.map(r => [...r]);
+    return A.map((r) => [...r]);
   }
 
   // ===== Inputs (texto -> número) =====
   onInputChange(value: string, i: number, j: number): void {
     // permitir negativos y decimales; limpiar otros chars
-    const normalized = (value ?? '').toString().replace(/[^0-9.+-eE]/g, '').replace(',', '.');
+    const normalized = (value ?? '')
+      .toString()
+      .replace(/[^0-9.+-eE]/g, '')
+      .replace(',', '.');
     const num = normalized === '' ? 0 : Number(normalized);
 
     if (!Number.isNaN(num)) {
@@ -85,7 +89,9 @@ export class GaussComponent {
       }
       // swap
       if (pivot !== i) {
-        const tmp = A[i]; A[i] = A[pivot]; A[pivot] = tmp;
+        const tmp = A[i];
+        A[i] = A[pivot];
+        A[pivot] = tmp;
       }
       // eliminar abajo
       for (let r = i + 1; r < n; r++) {
