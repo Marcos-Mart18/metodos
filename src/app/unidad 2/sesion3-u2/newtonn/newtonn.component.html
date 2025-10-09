@@ -32,10 +32,9 @@
   </div>
   <!-- Tarjeta principal -->
   <div
-    class="p-6 w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200"
+    class="p-6 w-full max-w-4xl bg-white rounded-2xl shadow-lg border border-gray-200"
   >
     <h2 class="text-xl font-bold mb-4 text-[#001C48]">Configuración</h2>
-    <!-- Configuración -->
     <!-- Configuración -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
       <div>
@@ -90,6 +89,20 @@
             class="p-2 bg-gray-200 rounded"
           >
             tan
+          </button>
+          <button
+            (click)="insertar('log()')"
+            type="button"
+            class="p-2 bg-gray-200 rounded"
+          >
+            log
+          </button>
+          <button
+            (click)="insertar('ln()')"
+            type="button"
+            class="p-2 bg-gray-200 rounded"
+          >
+            ln
           </button>
         </div>
       </div>

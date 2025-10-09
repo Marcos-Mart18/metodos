@@ -34,18 +34,18 @@ export class NewtonnComponent implements OnInit {
     this.paginaActual = 1; // Reiniciamos la paginación
 
     if (!this.ecuacion) {
-      alert('Por favor, ingresa una ecuación válida.');
+      this.mensaje = 'Por favor, ingresa una ecuación válida.';
       return;
     }
     if (this.x0 === null) {
-      alert('Debes ingresar un valor inicial X₀.');
+      this.mensaje = 'Debes ingresar un valor inicial X₀.';
       return;
     }
 
     // Asegúrate de que la ecuación se evalúe correctamente
-    const expr = this.ecuacion;
-    const f = (x: number) => math.evaluate(expr, { x });
-    const df = math.derivative(expr, 'x').toString(); // Calcula la primera derivada
+    const exprNorm = this.normalizeExpression(this.ecuacion);
+    const f = (x: number) => math.evaluate(exprNorm, { x });
+    const df = math.derivative(exprNorm, 'x').toString(); // Calcula la primera derivada
     const d2f = math.derivative(df, 'x').toString(); // Calcula la segunda derivada
 
     let xk = this.x0!;
@@ -124,5 +124,41 @@ export class NewtonnComponent implements OnInit {
     if (pagina < 1 || pagina > this.totalPaginas) return;
     this.paginaActual = pagina;
     this.actualizarPaginacion();
+  }
+
+  normalizeExpression(expr: string): string {
+    // 1) ln(...) -> log(...)
+    let s = (expr || '').replace(/ln\(/gi, 'log(');
+
+    // 2) Reescrituras con el AST de math.js
+    try {
+      const node: any = math.parse(s);
+      const transformed = node.transform((n: any) => {
+        if (n && n.isFunctionNode) {
+          const fname = n.fn?.name || n.name;
+          // log(x, b) -> log(x)/log(b)
+          if (fname === 'log' && n.args?.length === 2) {
+            const a = n.args[0].toString();
+            const b = n.args[1].toString();
+            return math.parse(`(log(${a})/log(${b}))`);
+          }
+          // log10(x) -> log(x)/log(10)
+          if (fname === 'log10' && n.args?.length === 1) {
+            const a = n.args[0].toString();
+            return math.parse(`(log(${a})/log(10))`);
+          }
+          // log2(x) -> log(x)/log(2)
+          if (fname === 'log2' && n.args?.length === 1) {
+            const a = n.args[0].toString();
+            return math.parse(`(log(${a})/log(2))`);
+          }
+        }
+        return n;
+      });
+      s = transformed.toString();
+    } catch {
+      // Si algo falla, nos quedamos con s tal cual.
+    }
+    return s;
   }
 }
