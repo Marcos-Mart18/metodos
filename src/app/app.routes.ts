@@ -18,6 +18,9 @@ import { Sesion2U2Component } from './unidad 2/sesion2-u2/sesion2-u2.component';
 import { CholeskiComponent } from './unidad 2/sesion2-u2/choleski/choleski.component';
 import { JacobiComponent } from './unidad 2/sesion2-u2/jacobi/jacobi.component';
 import { GaussSeidelComponent } from './unidad 2/sesion2-u2/gauss-seidel/gauss-seidel.component';
+import { Sesion3U2Component } from './unidad 2/sesion3-u2/sesion3-u2.component';
+import { NewtonnComponent } from './unidad 2/sesion3-u2/newtonn/newtonn.component';
+import { GradienteComponent } from './unidad 2/sesion3-u2/gradiente/gradiente.component';
 
 export const routes: Routes = [
   {
@@ -100,6 +103,18 @@ export const routes: Routes = [
   {
     path: 'gauss-seidel',
     component: GaussSeidelComponent,
+  },
+  {
+    path: 'sesion7',
+    component: Sesion3U2Component,
+  },
+  {
+    path: 'newtonn',
+    component: NewtonnComponent,
+  },
+  {
+    path: 'gradiente',
+    component: GradienteComponent,
   },
   {
     path: '**',
