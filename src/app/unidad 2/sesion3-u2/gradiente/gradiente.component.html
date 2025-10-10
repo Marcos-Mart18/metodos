@@ -1,1 +1,157 @@
-<p>gradiente works!</p>
+<div>
+  <a
+    routerLink="/sesion7"
+    class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+  >
+    <!-- SVG flecha -->
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      class="w-5 h-5"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <g data-name="Layer 2">
+        <g data-name="arrow-back">
+          <rect width="24" height="24" transform="rotate(90 12 12)" opacity="0"></rect>
+          <path
+            d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1.19 1.19 0 0 0-.09.15c0 .05 0 .08-.07.13A1 1 0 0 0 4 12a1 1 0 0 0 .07.36c0 .05 0 .08.07.13a1.19 1.19 0 0 0 .09.15l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .64-.23 1 1 0 0 0 .13-1.41L7.14 13H19a1 1 0 0 0 0-2z"
+          ></path>
+        </g>
+      </g>
+    </svg>
+    <span>Volver</span>
+  </a>
+</div>
+
+
+<div class="max-w-6xl mx-auto mt-6 px-4 space-y-6">
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+    <h2 class="text-xl font-bold mb-4 text-[#001C48]">Método de Gradiente</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Ecuación f(x, y)</label>
+        <input
+          [(ngModel)]="ecuacion"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="text"
+          placeholder="Ej: x^2 + y^2 - 3*x*y"
+        />
+        <div class="mt-2 grid grid-cols-6 gap-2 text-sm">
+          <button (click)="insertar('^')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">^</button>
+          <button (click)="insertar('sqrt()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">√</button>
+          <button (click)="insertar('pi')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">π</button>
+          <button (click)="insertar('sin()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">sin</button>
+          <button (click)="insertar('cos()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">cos</button>
+          <button (click)="insertar('tan()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">tan</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Error máximo(%)</label>
+        <input
+          [(ngModel)]="errorMax"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 0.01"
+        />
+      </div>
+    </div>
+
+    <!-- Opción Maximizar o Minimizar -->
+    <div class="mb-4">
+      <label class="inline-flex items-center gap-2 text-[#001C48] font-medium">
+        <input type="radio" [(ngModel)]="maximizar" value="true" class="form-radio h-5 w-5 text-blue-600">
+        Maximizar
+      </label>
+      <label class="inline-flex items-center gap-2 text-[#001C48] font-medium">
+        <input type="radio" [(ngModel)]="maximizar" value="false" class="form-radio h-5 w-5 text-blue-600">
+        Minimizar
+      </label>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Valor inicial X₀</label>
+        <input
+          [(ngModel)]="Xa"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 1"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#001C48]">Valor inicial Y₀</label>
+        <input
+          [(ngModel)]="Ya"
+          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          type="number"
+          placeholder="Ej: 1"
+        />
+      </div>
+    </div>
+
+    <button
+      (click)="resolver()"
+      class="mt-4 inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+    >
+      Calcular
+    </button>
+  </div>
+
+  <!-- Tabla de resultados -->
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+    <h3 class="text-lg font-bold mb-4 text-[#001C48]">Resultados</h3>
+    <table class="w-full text-sm text-left text-[#001C48] min-w-[700px]">
+      <thead class="text-xs bg-gray-100 border-b border-gray-300">
+        <tr>
+          <th class="px-4 py-3">Iteración</th>
+          <th class="px-4 py-3">X</th>
+          <th class="px-4 py-3">Y</th>
+          <th class="px-4 py-3">Vector S</th>
+          <th class="px-4 py-3">α (Cálculo de α)</th>
+          <th class="px-4 py-3">Xk+1</th>
+          <th class="px-4 py-3">Error %</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of resultadosPaginados" class="border-b hover:bg-gray-50">
+          <td class="px-4 py-3">{{ r.iteracion }}</td>
+          <td class="px-4 py-3">{{ r.X }}</td>
+          <td class="px-4 py-3">{{ r.Y }}</td>
+          <td class="px-4 py-3">{{ r.vectorS }}</td>
+          <td class="px-4 py-3">{{ r.alpha }}</td>
+          <td class="px-4 py-3">{{ r.Xk }}</td>
+          <td class="px-4 py-3">{{ r.error }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="flex justify-center mt-4 flex-wrap gap-1">
+      <button
+        *ngFor="let i of [].constructor(totalPaginas); let idx = index"
+        (click)="cambiarPagina(idx + 1)"
+        [ngClass]="{
+          'bg-[#003366] text-white': paginaActual === idx + 1,
+          'bg-gray-100 text-gray-500': paginaActual !== idx + 1
+        }"
+        class="px-3 py-1 rounded hover:bg-gray-300"
+      >
+        {{ idx + 1 }}
+      </button>
+    </div>
+  </div>
+
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col items-center w-full max-w-full overflow-x-auto">
+    <h3 class="text-lg font-bold mb-4 text-[#001C48] text-center">Gráfico de la función</h3>
+    <div id="geogebra-graph" class="w-full max-w-full md:w-3/4 h-[400px] rounded-lg"></div>
+  </div>
+  <!-- <div id="geogebra-graph" style="width: 100%; height: 500px;"></div> -->
+
+  <!-- Mensaje debajo de la tabla -->
+  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
+    <h3 class="text-lg font-bold mb-4 text-[#001C48]">Resultado de la optimización</h3>
+    <p class="text-lg text-[#003366]">{{ mensajeResultado }}</p>
+  </div>
+</div>
