@@ -21,6 +21,9 @@ import { GaussSeidelComponent } from './unidad 2/sesion2-u2/gauss-seidel/gauss-s
 import { Sesion3U2Component } from './unidad 2/sesion3-u2/sesion3-u2.component';
 import { NewtonnComponent } from './unidad 2/sesion3-u2/newtonn/newtonn.component';
 import { GradienteComponent } from './unidad 2/sesion3-u2/gradiente/gradiente.component';
+import { SimplexComponent } from './unidad 2/sesion3-u2/simplex/simplex.component';
+import { Sesion4U2Component } from './unidad 2/sesion4-u2/sesion4-u2.component';
+import { MinCuadradosComponent } from './unidad 2/sesion4-u2/min-cuadrados/min-cuadrados.component';
 
 export const routes: Routes = [
   {
@@ -115,6 +118,18 @@ export const routes: Routes = [
   {
     path: 'gradiente',
     component: GradienteComponent,
+  },
+  {
+    path: 'simplex',
+    component: SimplexComponent,
+  },
+  {
+    path: 'sesion8',
+    component: Sesion4U2Component,
+  },
+  {
+    path: 'cuadrados',
+    component: MinCuadradosComponent,
   },
   {
     path: '**',
