@@ -1,157 +1,195 @@
-<div>
+<div class="p-6 min-h-screen flex flex-col items-center bg-gray-50">
+  <!-- Volver -->
   <a
     routerLink="/sesion7"
-    class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+    class="self-start inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition mb-6"
+    aria-label="Volver a la sesión 7"
   >
-    <!-- SVG flecha -->
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="w-5 h-5"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <g data-name="Layer 2">
-        <g data-name="arrow-back">
-          <rect width="24" height="24" transform="rotate(90 12 12)" opacity="0"></rect>
-          <path
-            d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1.19 1.19 0 0 0-.09.15c0 .05 0 .08-.07.13A1 1 0 0 0 4 12a1 1 0 0 0 .07.36c0 .05 0 .08.07.13a1.19 1.19 0 0 0 .09.15l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .64-.23 1 1 0 0 0 .13-1.41L7.14 13H19a1 1 0 0 0 0-2z"
-          ></path>
-        </g>
-      </g>
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .64-.23 1 1 0 0 0 .13-1.41L7.14 13H19a1 1 0 0 0 0-2z"/>
     </svg>
     <span>Volver</span>
   </a>
-</div>
 
+  <div class="w-full max-w-6xl bg-white rounded-2xl shadow-lg border border-gray-200 p-6 space-y-6">
+    <header class="flex items-center justify-between flex-wrap gap-3">
+      <h2 class="text-2xl font-bold text-[#001C48]">Método del Gradiente (Ascenso/Descenso)</h2>
+      <div class="flex items-center gap-2 text-xs text-gray-500">
+        <span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100">Decimales:</span>
+        <input
+          [(ngModel)]="decimales"
+          type="number"
+          min="0"
+          max="15"
+          class="w-20 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+        />
+      </div>
+    </header>
 
-<div class="max-w-6xl mx-auto mt-6 px-4 space-y-6">
-  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
-    <h2 class="text-xl font-bold mb-4 text-[#001C48]">Método de Gradiente</h2>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <div>
-        <label class="block text-sm font-medium text-[#001C48]">Ecuación f(x, y)</label>
+    <!-- Formulario -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <!-- Ecuación -->
+      <div class="lg:col-span-2">
+        <label class="block text-sm font-medium text-[#001C48] mb-1">Ecuación f(x, y)</label>
         <input
           [(ngModel)]="ecuacion"
-          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+          class="w-full p-3 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
           type="text"
           placeholder="Ej: x^2 + y^2 - 3*x*y"
+          aria-label="Ecuación f(x, y)"
         />
-        <div class="mt-2 grid grid-cols-6 gap-2 text-sm">
+        <div class="mt-2 grid grid-cols-8 sm:grid-cols-10 gap-2 text-sm">
           <button (click)="insertar('^')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">^</button>
           <button (click)="insertar('sqrt()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">√</button>
           <button (click)="insertar('pi')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">π</button>
           <button (click)="insertar('sin()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">sin</button>
           <button (click)="insertar('cos()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">cos</button>
           <button (click)="insertar('tan()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">tan</button>
+          <button (click)="insertar('exp()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">exp</button>
+          <button (click)="insertar('ln()')" type="button" class="p-2 bg-gray-200 rounded hover:bg-gray-300">ln</button>
+          <button (click)="setEjemplo('x^2 + y^2 - 3*x*y')" type="button" class="p-2 bg-blue-50 text-[#003366] border border-[#003366]/20 rounded hover:bg-blue-100">Ejemplo 1</button>
+          <button (click)="setEjemplo('x^4 + y^4 - 2*x^2 - 2*y^2 + 1')" type="button" class="p-2 bg-blue-50 text-[#003366] border border-[#003366]/20 rounded hover:bg-blue-100">Ejemplo 2</button>
+        </div>
+        <p *ngIf="mensajeError" class="mt-2 text-sm text-red-600">{{ mensajeError }}</p>
+      </div>
+
+      <!-- Parámetros -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-[#001C48]">Criterio de error (%)</label>
+          <input
+            [(ngModel)]="errorMax"
+            class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+            type="number"
+            step="any"
+            placeholder="Ej: 0.01"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-[#001C48]">Iteraciones máximas</label>
+          <input
+            [(ngModel)]="maxIter"
+            class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+            type="number"
+            min="1"
+            placeholder="Ej: 200"
+          />
+        </div>
+        <div class="flex items-center gap-6">
+          <label class="inline-flex items-center gap-2 text-[#001C48] font-medium">
+            <input type="radio" name="modo" [value]="true" [(ngModel)]="maximizar" class="h-5 w-5 text-blue-600"/>
+            Maximizar
+          </label>
+          <label class="inline-flex items-center gap-2 text-[#001C48] font-medium">
+            <input type="radio" name="modo" [value]="false" [(ngModel)]="maximizar" class="h-5 w-5 text-blue-600"/>
+            Minimizar
+          </label>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-[#001C48]">X₀</label>
+            <input
+              [(ngModel)]="Xa"
+              class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+              type="number"
+              step="any"
+              placeholder="1"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-[#001C48]">Y₀</label>
+            <input
+              [(ngModel)]="Ya"
+              class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
+              type="number"
+              step="any"
+              placeholder="1"
+            />
+          </div>
+        </div>
+        <div class="flex gap-3">
+          <button
+            (click)="resolver()"
+            class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
+          >
+            Calcular
+          </button>
+          <button
+            (click)="limpiar()"
+            class="inline-flex items-center gap-2 bg-gray-100 text-[#001C48] font-semibold text-sm px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-200"
+          >
+            Limpiar
+          </button>
         </div>
       </div>
+    </section>
 
-      <div>
-        <label class="block text-sm font-medium text-[#001C48]">Error máximo(%)</label>
-        <input
-          [(ngModel)]="errorMax"
-          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
-          type="number"
-          placeholder="Ej: 0.01"
-        />
+    <!-- Resultados -->
+    <section class="space-y-4">
+      <h3 class="text-lg font-bold text-[#001C48]">Resultados</h3>
+
+      <div class="overflow-x-auto rounded-xl border border-gray-200">
+        <table class="w-full text-sm text-left text-[#001C48]">
+          <thead class="text-xs bg-gray-100 border-b border-gray-200 sticky top-0">
+            <tr>
+              <th class="px-4 py-3">Iter</th>
+              <th class="px-4 py-3">x</th>
+              <th class="px-4 py-3">y</th>
+              <th class="px-4 py-3">∇f(x,y)</th>
+              <th class="px-4 py-3">||∇f||</th>
+              <th class="px-4 py-3">s</th>
+              <th class="px-4 py-3">α</th>
+              <th class="px-4 py-3">xₖ₊₁</th>
+              <th class="px-4 py-3">f(xₖ₊₁)</th>
+              <th class="px-4 py-3">Error %</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let r of resultadosPaginados; let i = index; trackBy: trackByIndex" class="border-b hover:bg-gray-50">
+              <td class="px-4 py-3">{{ r.k }}</td>
+              <td class="px-4 py-3">({{ r.x | number:'1.'+decimales+'-'+decimales }})</td>
+              <td class="px-4 py-3">({{ r.y | number:'1.'+decimales+'-'+decimales }})</td>
+              <td class="px-4 py-3">({{ r.sxDir | number:'1.'+decimales+'-'+decimales }}, {{ r.syDir | number:'1.'+decimales+'-'+decimales }})</td>
+              <td class="px-4 py-3">{{ r.gradNorm | number:'1.'+decimales+'-'+decimales }}</td>
+              <td class="px-4 py-3">({{ r.sx | number:'1.'+decimales+'-'+decimales }}, {{ r.sy | number:'1.'+decimales+'-'+decimales }})</td>
+              <td class="px-4 py-3">{{ r.alpha | number:'1.'+decimales+'-'+decimales }}</td>
+              <td class="px-4 py-3">({{ r.xNext | number:'1.'+decimales+'-'+decimales }}, {{ r.yNext | number:'1.'+decimales+'-'+decimales }})</td>
+              <td class="px-4 py-3">{{ r.fNext | number:'1.'+decimales+'-'+decimales }}</td>
+              <td class="px-4 py-3">{{ r.errPct | number:'1.6-6' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
 
-    <!-- Opción Maximizar o Minimizar -->
-    <div class="mb-4">
-      <label class="inline-flex items-center gap-2 text-[#001C48] font-medium">
-        <input type="radio" [(ngModel)]="maximizar" value="true" class="form-radio h-5 w-5 text-blue-600">
-        Maximizar
-      </label>
-      <label class="inline-flex items-center gap-2 text-[#001C48] font-medium">
-        <input type="radio" [(ngModel)]="maximizar" value="false" class="form-radio h-5 w-5 text-blue-600">
-        Minimizar
-      </label>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-      <div>
-        <label class="block text-sm font-medium text-[#001C48]">Valor inicial X₀</label>
-        <input
-          [(ngModel)]="Xa"
-          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
-          type="number"
-          placeholder="Ej: 1"
-        />
+      <!-- Paginación -->
+      <div class="flex justify-center mt-2 flex-wrap gap-1" *ngIf="totalPaginas > 1">
+        <button
+          *ngFor="let p of paginas"
+          (click)="cambiarPagina(p)"
+          [ngClass]="{
+            'bg-[#003366] text-white': paginaActual === p,
+            'bg-gray-100 text-gray-700': paginaActual !== p
+          }"
+          class="px-3 py-1 rounded hover:bg-gray-300"
+        >
+          {{ p }}
+        </button>
       </div>
+    </section>
 
-      <div>
-        <label class="block text-sm font-medium text-[#001C48]">Valor inicial Y₀</label>
-        <input
-          [(ngModel)]="Ya"
-          class="w-full p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none"
-          type="number"
-          placeholder="Ej: 1"
-        />
-      </div>
-    </div>
+    <!-- Gráfico (GeoGebra 3D si está disponible) -->
+    <section class="flex flex-col items-center w-full max-w-full">
+      <h3 class="text-lg font-bold mb-4 text-[#001C48] text-center">Gráfico de la función</h3>
+      <div id="geogebra-graph" class="w-full max-w-full h-[420px] rounded-lg border border-gray-200"></div>
+      <p *ngIf="geogebraNoDisponible" class="text-sm text-amber-700 mt-2">
+        No se detectó GeoGebra. Asegúrate de cargar el script oficial antes de usar el gráfico.
+      </p>
+    </section>
 
-    <button
-      (click)="resolver()"
-      class="mt-4 inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
-    >
-      Calcular
-    </button>
-  </div>
-
-  <!-- Tabla de resultados -->
-  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
-    <h3 class="text-lg font-bold mb-4 text-[#001C48]">Resultados</h3>
-    <table class="w-full text-sm text-left text-[#001C48] min-w-[700px]">
-      <thead class="text-xs bg-gray-100 border-b border-gray-300">
-        <tr>
-          <th class="px-4 py-3">Iteración</th>
-          <th class="px-4 py-3">X</th>
-          <th class="px-4 py-3">Y</th>
-          <th class="px-4 py-3">Vector S</th>
-          <th class="px-4 py-3">α (Cálculo de α)</th>
-          <th class="px-4 py-3">Xk+1</th>
-          <th class="px-4 py-3">Error %</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let r of resultadosPaginados" class="border-b hover:bg-gray-50">
-          <td class="px-4 py-3">{{ r.iteracion }}</td>
-          <td class="px-4 py-3">{{ r.X }}</td>
-          <td class="px-4 py-3">{{ r.Y }}</td>
-          <td class="px-4 py-3">{{ r.vectorS }}</td>
-          <td class="px-4 py-3">{{ r.alpha }}</td>
-          <td class="px-4 py-3">{{ r.Xk }}</td>
-          <td class="px-4 py-3">{{ r.error }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="flex justify-center mt-4 flex-wrap gap-1">
-      <button
-        *ngFor="let i of [].constructor(totalPaginas); let idx = index"
-        (click)="cambiarPagina(idx + 1)"
-        [ngClass]="{
-          'bg-[#003366] text-white': paginaActual === idx + 1,
-          'bg-gray-100 text-gray-500': paginaActual !== idx + 1
-        }"
-        class="px-3 py-1 rounded hover:bg-gray-300"
-      >
-        {{ idx + 1 }}
-      </button>
-    </div>
-  </div>
-
-  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200 flex flex-col items-center w-full max-w-full overflow-x-auto">
-    <h3 class="text-lg font-bold mb-4 text-[#001C48] text-center">Gráfico de la función</h3>
-    <div id="geogebra-graph" class="w-full max-w-full md:w-3/4 h-[400px] rounded-lg"></div>
-  </div>
-  <!-- <div id="geogebra-graph" style="width: 100%; height: 500px;"></div> -->
-
-  <!-- Mensaje debajo de la tabla -->
-  <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
-    <h3 class="text-lg font-bold mb-4 text-[#001C48]">Resultado de la optimización</h3>
-    <p class="text-lg text-[#003366]">{{ mensajeResultado }}</p>
+    <!-- Mensaje final -->
+    <section>
+      <h3 class="text-lg font-bold mb-2 text-[#001C48]">Resultado de la optimización</h3>
+      <p class="text-base text-[#003366]" *ngIf="mensajeResultado">{{ mensajeResultado }}</p>
+    </section>
   </div>
 </div>
