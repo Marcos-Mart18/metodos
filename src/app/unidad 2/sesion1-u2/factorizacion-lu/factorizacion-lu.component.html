@@ -3,25 +3,17 @@
     routerLink="/sesion5"
     class="inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition"
   >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="w-5 h-5"
-      viewBox="0 0 24 24"
-      fill="currentColor"
-    >
-      <path
-        d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .77-1.64L7.14 13H19a1 1 0 0 0 0-2z"
-      />
+    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .77-1.64L7.14 13H19a1 1 0 0 0 0-2z"/>
     </svg>
     <span>Volver</span>
   </a>
 </div>
+
 <div class="p-6 min-h-screen flex flex-col items-center">
   <!-- Encabezado -->
   <div class="w-full text-center mb-6">
-    <h1 class="text-3xl font-bold text-[#001C48] mb-2">
-      Descomposición LU (PA = LU)
-    </h1>
+    <h1 class="text-3xl font-bold text-[#001C48] mb-2">Descomposición LU</h1>
     <p class="text-gray-600">
       Define <span class="font-semibold">N</span>, ingresa los
       <span class="font-semibold">coeficientes</span> y los
@@ -31,37 +23,28 @@
   </div>
 
   <!-- Tarjeta principal -->
-  <div
-    class="p-6 w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200"
-  >
+  <div class="p-6 w-full max-w-3xl bg-white rounded-2xl shadow-lg border border-gray-200">
     <h2 class="text-xl font-bold mb-4 text-[#001C48]">Configuración</h2>
 
     <!-- Tamaño N -->
     <div class="flex items-center gap-4 mb-6">
-      <label for="matrixSize" class="text-sm font-medium text-[#001C48]">
-        Número de incógnitas (N):
-      </label>
+      <label for="matrixSize" class="text-sm font-medium text-[#001C48]">Número de incógnitas (N):</label>
       <input
         type="number"
         id="matrixSize"
         [ngModel]="matrix().length"
         (ngModelChange)="adjustMatrixSize($event)"
-        min="2"
-        max="10"
+        min="2" max="10"
         class="w-24 p-2 rounded bg-gray-100 text-[#001C48] border border-gray-300 focus:ring-2 focus:ring-[#3BAFDA] focus:outline-none text-center"
       />
     </div>
 
-    <!-- Ingreso como ecuaciones: a11 x1 + a12 x2 + ... = b1 -->
+    <!-- Ingreso como ecuaciones -->
     <h3 class="text-lg font-semibold text-[#001C48] mb-4">Ingresar valores</h3>
     <div class="overflow-x-auto">
-      <div
-        *ngFor="let row of matrix(); let i = index"
-        class="flex items-center gap-2 mb-3"
-      >
+      <div *ngFor="let row of matrix(); let i = index" class="flex items-center gap-2 mb-3">
         <ng-container *ngFor="let _ of row; let j = index">
           <ng-container *ngIf="j < row.length - 1">
-            <!-- coeficiente a_ij -->
             <input
               type="text"
               [ngModel]="tempMatrix()[i][j]"
@@ -70,12 +53,8 @@
               placeholder="a{{ i + 1 }}{{ j + 1 }}"
               inputmode="decimal"
             />
-            <span *ngIf="j < row.length - 2" class="font-semibold"
-              >x{{ j + 1 }} +</span
-            >
-            <span *ngIf="j === row.length - 2" class="font-semibold"
-              >x{{ j + 1 }} =</span
-            >
+            <span *ngIf="j < row.length - 2" class="font-semibold">x{{ j + 1 }} +</span>
+            <span *ngIf="j === row.length - 2" class="font-semibold">x{{ j + 1 }} =</span>
           </ng-container>
         </ng-container>
 
@@ -105,10 +84,8 @@
     <div
       class="p-4 rounded-lg text-sm text-center"
       [ngClass]="{
-        'bg-green-100 text-green-800 border border-green-300':
-          message() === 'Sistema resuelto con éxito.',
-        'bg-red-100 text-red-800 border border-red-300':
-          message() !== 'Sistema resuelto con éxito.'
+        'bg-green-100 text-green-800 border border-green-300': message() === 'Sistema resuelto con éxito.',
+        'bg-red-100 text-red-800 border border-red-300': message() !== 'Sistema resuelto con éxito.'
       }"
     >
       {{ message() }}
@@ -120,29 +97,21 @@
     <div class="p-6 bg-white rounded-2xl shadow-lg border border-gray-200">
       <h2 class="text-xl font-bold mb-4 text-[#001C48]">Resultados</h2>
       <div class="grid grid-cols-2 gap-4">
-        <p
-          *ngFor="let sol of solutions(); let i = index"
-          class="text-gray-800 text-lg font-medium"
-        >
+        <p *ngFor="let sol of solutions(); let i = index" class="text-gray-800 text-lg font-medium">
           x<sub>{{ i + 1 }}</sub> =
           <span class="text-[#003366] font-bold">{{ sol.toFixed(4) }}</span>
         </p>
       </div>
 
-      <!-- L y U (opcional, útil para aprendizaje) -->
-      <div
-        class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6"
-        *ngIf="L().length && U().length"
-      >
+      <!-- L y U (finales) -->
+      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6" *ngIf="L().length && U().length">
         <div>
           <h3 class="text-md font-semibold text-[#001C48] mb-2">Matriz L</h3>
           <div class="overflow-x-auto">
             <table class="min-w-full border border-gray-200 rounded-lg">
               <tbody>
                 <tr *ngFor="let r of L()">
-                  <td *ngFor="let c of r" class="px-3 py-2 text-center">
-                    {{ c | number : "1.4-4" }}
-                  </td>
+                  <td *ngFor="let c of r" class="px-3 py-2 text-center">{{ c | number:'1.4-4' }}</td>
                 </tr>
               </tbody>
             </table>
@@ -154,15 +123,130 @@
             <table class="min-w-full border border-gray-200 rounded-lg">
               <tbody>
                 <tr *ngFor="let r of U()">
-                  <td *ngFor="let c of r" class="px-3 py-2 text-center">
-                    {{ c | number : "1.4-4" }}
-                  </td>
+                  <td *ngFor="let c of r" class="px-3 py-2 text-center">{{ c | number:'1.4-4' }}</td>
                 </tr>
               </tbody>
             </table>
           </div>
         </div>
       </div>
+
     </div>
   </div>
+
+  <!-- ========= Pasos del método (PA = LU) ========= -->
+  <div *ngIf="steps().length > 0" class="mt-6 w-full max-w-3xl">
+    <h2 class="text-xl font-bold mb-4 text-[#001C48]">Pasos del método (PA = LU)</h2>
+
+    <div class="space-y-4">
+      <div *ngFor="let s of steps(); let idx = index" class="rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+        <!-- Header del paso -->
+        <div class="flex items-center justify-between px-4 py-3 bg-[#F4F8FB] border-b">
+          <div class="flex items-center gap-3">
+            <span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#001C48] text-white text-sm font-bold">{{ idx + 1 }}</span>
+            <div>
+              <p class="font-semibold text-[#001C48]">{{ s.title }}</p>
+              <p *ngIf="s.detail" class="text-xs text-gray-600">{{ s.detail }}</p>
+            </div>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full border"
+                [ngClass]="{
+                  'bg-blue-100 text-blue-800 border-blue-300': s.kind === 'pivot' || s.kind === 'u-row',
+                  'bg-amber-100 text-amber-800 border-amber-300': s.kind === 'swap',
+                  'bg-cyan-100 text-cyan-800 border-cyan-300': s.kind === 'l-mult' || s.kind === 'schur',
+                  'bg-violet-100 text-violet-800 border-violet-300': s.kind === 'permute-b',
+                  'bg-emerald-100 text-emerald-800 border-emerald-300': s.kind === 'forward' || s.kind === 'backward' || s.kind === 'done',
+                  'bg-red-100 text-red-800 border-red-300': s.kind === 'singular',
+                  'bg-gray-100 text-gray-700 border-gray-300': s.kind === 'validate'
+                }">
+            {{ s.kind }}
+          </span>
+        </div>
+
+        <!-- Operación (si existe) -->
+        <div *ngIf="s.operation" class="px-4 pt-4">
+          <span class="inline-block text-xs font-mono px-2 py-1 rounded bg-gray-100 border border-gray-300">
+            {{ s.operation }}
+          </span>
+        </div>
+
+        <!-- Cuerpo: tablas L, U y A -->
+        <div class="p-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- L -->
+          <div>
+            <h4 class="text-sm font-semibold text-[#001C48] mb-2">L</h4>
+            <div class="overflow-x-auto">
+              <table class="min-w-max text-sm border-separate border-spacing-0">
+                <tbody>
+                  <tr *ngFor="let row of s.L; let i = index">
+                    <td *ngFor="let val of row; let j = index"
+                        class="px-2 py-1 text-center border border-gray-200"
+                        [ngClass]="{
+                          'bg-emerald-50': s.highlightRow === i && j < row.length,
+                          'bg-yellow-100 font-semibold': s.highlightRow === i && s.highlightCol === j
+                        }">
+                      {{ format(val, 4) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- U -->
+          <div>
+            <h4 class="text-sm font-semibold text-[#001C48] mb-2">U</h4>
+            <div class="overflow-x-auto">
+              <table class="min-w-max text-sm border-separate border-spacing-0">
+                <tbody>
+                  <tr *ngFor="let row of s.U; let i = index">
+                    <td *ngFor="let val of row; let j = index"
+                        class="px-2 py-1 text-center border border-gray-200"
+                        [ngClass]="{
+                          'bg-blue-50': s.highlightCol === j && j < row.length,
+                          'bg-yellow-100 font-semibold': s.highlightRow === i && s.highlightCol === j
+                        }">
+                      {{ format(val, 4) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- A (parcial/Schur) -->
+          <div>
+            <h4 class="text-sm font-semibold text-[#001C48] mb-2">A (parcial)</h4>
+            <div class="overflow-x-auto">
+              <table class="min-w-max text-sm border-separate border-spacing-0">
+                <tbody>
+                  <tr *ngFor="let row of s.A; let i = index">
+                    <td *ngFor="let val of row; let j = index"
+                        class="px-2 py-1 text-center border border-gray-200"
+                        [ngClass]="{
+                          'bg-yellow-100 font-semibold': s.highlightRow === i && s.highlightCol === j
+                        }">
+                      {{ format(val, 4) }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extra info -->
+        <div *ngIf="s.meta && (s.kind === 'l-mult' || s.kind === 'permute-b' || s.kind === 'forward' || s.kind === 'backward')" class="px-4 pb-4 text-xs text-gray-700">
+          <p *ngIf="s.kind === 'l-mult'">L[i,k] = {{ format(s.meta['L_ik'] ?? 0, 6) }}</p>
+          <p *ngIf="s.kind === 'permute-b'">
+            P = [ {{ joinNums(s.meta['P']) }} ]
+            &nbsp;·&nbsp; b → Pb = [ {{ joinFormatted(s.meta['Pb'], 4) }} ]
+          </p>
+          <p *ngIf="s.kind === 'forward'">y = …, valor actualizado: y = {{ format(s.meta['yi'] ?? 0, 6) }}</p>
+          <p *ngIf="s.kind === 'backward'">x = …, valor actualizado: x = {{ format(s.meta['xi'] ?? 0, 6) }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ========= Fin pasos ========= -->
 </div>
