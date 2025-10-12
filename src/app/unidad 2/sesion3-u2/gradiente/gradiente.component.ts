@@ -1,5 +1,5 @@
 import { CommonModule, NgFor } from '@angular/common';
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { create, all } from 'mathjs';
@@ -16,7 +16,7 @@ declare global {
 @Component({ selector: 'app-gradiente', standalone: true, 
 imports: [FormsModule, NgFor, CommonModule,RouterLink], 
 templateUrl: './gradiente.component.html', })
-export class GradienteComponent implements OnInit, AfterViewInit {
+export class GradienteComponent implements OnInit {
   ecuacion: string = '';
   errorMax: number = 0.01;
   maximizar: boolean = false;
@@ -30,10 +30,7 @@ export class GradienteComponent implements OnInit, AfterViewInit {
   totalPaginas: number = 1;
   resultadosPaginados: any[] = [];
 
-  ngOnInit(): void {}
-
-  // Se ejecuta después de que la vista está inicializada
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
     this.initGeoGebra3D();
   }
 
