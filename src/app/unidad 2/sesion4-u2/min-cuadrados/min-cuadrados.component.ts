@@ -1,6 +1,7 @@
 import { Component, ElementRef, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 type Num = number;
 interface Fila { x: Num | null; y: Num | null; }
@@ -16,7 +17,7 @@ declare global {
 @Component({
   selector: 'app-min-cuadrados',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './min-cuadrados.component.html'
 })
 export class MinCuadradosComponent {
