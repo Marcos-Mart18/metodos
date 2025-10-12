@@ -25,9 +25,17 @@
     <p class="text-gray-600">
       Iterativo en sitio:
       <span class="font-semibold">
-        x<sub>i</sub>^(k+1) = ( b<sub>i</sub> − Σ<sub>j&lt;i</sub>
-        a<sub>ij</sub>·x<sub>j</sub>^(k+1) − Σ<sub>j&gt;i</sub>
-        a<sub>ij</sub>·x<sub>j</sub>^(k) ) / a<sub>ii</sub> </span
+        x<sub>i</sub><sup>{{ "{" }}k+1{{ "}" }}</sup> = ( b<sub>i</sub> − Σ<sub
+          >{{ "{" }}j&lt;i{{ "}" }}</sub
+        >
+        a<sub>{{ "{" }}ij{{ "}" }}</sub
+        >x<sub>j</sub><sup>{{ "{" }}k+1{{ "}" }}</sup> − Σ<sub
+          >{{ "{" }}j&gt;i{{ "}" }}</sub
+        >
+        a<sub>{{ "{" }}ij{{ "}" }}</sub
+        >x<sub>j</sub><sup>{{ "{" }}k{{ "}" }}</sup> ) / a<sub
+          >{{ "{" }}ii{{ "}" }}</sub
+        > </span
       >. Recomendado que <span class="font-semibold">A</span> sea
       <em>diagonalmente dominante</em>.
     </p>
@@ -190,7 +198,7 @@
           x<sub [textContent]="i + 1"></sub> =
           <span
             class="text-[#003366] font-bold"
-            [textContent]="v | number : '1.6-6'"
+            [textContent]="v | number : '1.0-8'"
           ></span>
         </p>
       </div>
@@ -205,26 +213,69 @@
             <thead class="bg-gray-50">
               <tr>
                 <th class="px-3 py-2 text-left">k</th>
+
+                <!-- x1..xn -->
                 <th
                   class="px-3 py-2"
                   *ngFor="let _ of solution(); let i = index"
                   [textContent]="'x' + (i + 1)"
+                  title="Aproximación x{{ i + 1 }}"
                 ></th>
-                <th class="px-3 py-2">‖Δx‖∞ / ‖x‖∞</th>
+
+                <!-- fx1..fxn -->
+                <th
+                  class="px-3 py-2"
+                  *ngFor="let _ of solution(); let i = index"
+                  [textContent]="'f x' + (i + 1)"
+                  title="Residual f(x)_{{ i + 1 }} = (A·x - b)_{{ i + 1 }}"
+                ></th>
+
+                <!-- e1(%)..en(%) -->
+                <th
+                  class="px-3 py-2"
+                  *ngFor="let _ of solution(); let i = index"
+                  [textContent]="'e' + (i + 1) + ' (%)'"
+                  title="Error relativo porcentual de x{{ i + 1 }}"
+                ></th>
               </tr>
             </thead>
+
             <tbody>
-              <tr *ngFor="let it of iterations()">
+              <tr *ngFor="let it of pagedIterations()">
                 <td class="px-3 py-2" [textContent]="it.k"></td>
+
+                <!-- x -->
                 <td class="px-3 py-2 text-center" *ngFor="let xi of it.x">
-                  <span [textContent]="xi | number : '1.6-6'"></span>
+                  <span [textContent]="xi | number : '1.0-8'"></span>
                 </td>
-                <td class="px-3 py-2 text-center">
-                  <span [textContent]="it.err | number : '1.2-6'"></span>
+
+                <!-- fx -->
+                <td class="px-3 py-2 text-center" *ngFor="let fxi of it.fx">
+                  <span [textContent]="fxi | number : '1.0-8'"></span>
+                </td>
+
+                <!-- e_i (%) -->
+                <td class="px-3 py-2 text-center" *ngFor="let ei of it.e">
+                  <span [textContent]="ei | number : '1.0-8'"></span>%
                 </td>
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- Paginación estilo Bisección -->
+        <div class="flex justify-center mt-4 flex-wrap gap-1">
+          <button
+            *ngFor="let _ of [].constructor(totalPages()); let idx = index"
+            (click)="changePage(idx + 1)"
+            [ngClass]="{
+              'bg-[#003366] text-white': page() === idx + 1,
+              'bg-gray-100 text-gray-500': page() !== idx + 1
+            }"
+            class="px-3 py-1 rounded hover:bg-gray-300"
+          >
+            {{ idx + 1 }}
+          </button>
         </div>
       </div>
     </div>
