@@ -1,16 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, signal } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-choleski',
-  standalone: true,
   imports: [RouterLink, FormsModule, CommonModule],
   templateUrl: './choleski.component.html',
 })
 export class CholeskiComponent {
-  // Estado principal
+  // Estado principal (Signals)
   matrix = signal<number[][]>([]);
   tempMatrix = signal<number[][]>([]);
   solutions = signal<number[]>([]);
@@ -24,24 +23,33 @@ export class CholeskiComponent {
   symOk = signal<boolean | null>(null);
   spdOk = signal<boolean | null>(null);
 
-  private readonly EPS = 1e-10; // tolerancia numérica
+  // Estilos de mensajes (igual que en Jacobi/GS)
+  messageClass = computed(() => {
+    const m = this.message();
+    if (!m) return 'bg-gray-50 text-gray-700 border border-gray-200';
+    if (m.startsWith('✔'))
+      return 'bg-green-100 text-green-800 border border-green-300';
+    if (m.startsWith('⚠'))
+      return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+    return 'bg-red-100 text-red-800 border border-red-300';
+  });
+
+  private readonly EPS = 1e-12;
 
   constructor() {
-    this.adjustMatrixSize(3); // tamaño por defecto
+    this.adjustMatrixSize(3); // por defecto
   }
 
   // ---------- Utilidades ----------
-  private clone(A: number[][]): number[][] {
+  private clone<T>(A: T[][]): T[][] {
     return A.map((r) => [...r]);
   }
-
   private zeros(n: number, m: number): number[][] {
     return Array.from({ length: n }, () => Array(m).fill(0));
   }
-
   private transpose(A: number[][]): number[][] {
-    const n = A.length;
-    const m = A[0].length;
+    const n = A.length,
+      m = A[0].length;
     const T = this.zeros(m, n);
     for (let i = 0; i < n; i++) for (let j = 0; j < m; j++) T[j][i] = A[i][j];
     return T;
@@ -78,7 +86,7 @@ export class CholeskiComponent {
     this.message.set(null);
   }
 
-  // ---------- Chequeos previos ----------
+  // ---------- Chequeos ----------
   private isSymmetric(A: number[][], tol = 1e-10): boolean {
     const n = A.length;
     for (let i = 0; i < n; i++) {
@@ -90,13 +98,9 @@ export class CholeskiComponent {
   }
 
   // ---------- Cholesky ----------
-  /**
-   * Devuelve L tal que A = L Lᵀ si A es SPD.
-   * Si falla en algún pivote (<= 0), no es definida positiva.
-   */
+  /** Devuelve L tal que A = L·Lᵀ si A es SPD. */
   private cholesky(Ain: number[][]) {
     const n = Ain.length;
-    const A = this.clone(Ain);
     const L = this.zeros(n, n);
 
     for (let i = 0; i < n; i++) {
@@ -105,19 +109,16 @@ export class CholeskiComponent {
         for (let k = 0; k < j; k++) s += L[i][k] * L[j][k];
 
         if (i === j) {
-          const diag = A[i][i] - s;
-          if (diag <= this.EPS) {
+          const diag = Ain[i][i] - s;
+          if (diag <= this.EPS)
             return { ok: false as const, L: [] as number[][] };
-          }
           L[i][i] = Math.sqrt(diag);
         } else {
-          L[i][j] = (A[i][j] - s) / L[j][i === j ? j : j]; // L[j][j]
-          // más claro:
-          // L[i][j] = (A[i][j] - s) / L[j][j];
+          // ✅ CORRECTO: dividir por L[j][j]
+          L[i][j] = (Ain[i][j] - s) / L[j][j];
         }
       }
     }
-
     return { ok: true as const, L };
   }
 
@@ -134,13 +135,13 @@ export class CholeskiComponent {
     return y;
   }
 
-  // (Lᵀ)x = y  => sustitución hacia atrás usando la transpuesta de L
+  // (Lᵀ)x = y
   private backSubstLt(L: number[][], y: number[]): number[] {
     const n = L.length;
     const x = new Array(n).fill(0);
     for (let i = n - 1; i >= 0; i--) {
       let s = y[i];
-      for (let j = i + 1; j < n; j++) s -= L[j][i] * x[j]; // ojo: Lᵀ[i][j] = L[j][i]
+      for (let j = i + 1; j < n; j++) s -= L[j][i] * x[j]; // Lᵀ[i][j] = L[j][i]
       x[i] = s / L[i][i];
     }
     return x;
@@ -150,7 +151,7 @@ export class CholeskiComponent {
   solveSystem(): void {
     const n = this.tempMatrix().length;
     if (n === 0 || this.tempMatrix()[0].length !== n + 1) {
-      this.message.set('La matriz no tiene el formato correcto (n × (n+1)).');
+      this.message.set('✖ Formato inválido: se espera n × (n+1).');
       return;
     }
 
@@ -162,7 +163,7 @@ export class CholeskiComponent {
       b[i] = this.tempMatrix()[i][n];
     }
 
-    // 1) Chequeo de simetría
+    // 1) Simetría
     const symmetric = this.isSymmetric(A, 1e-9);
     this.symOk.set(symmetric);
     if (!symmetric) {
@@ -176,7 +177,7 @@ export class CholeskiComponent {
       return;
     }
 
-    // 2) Intento de Cholesky (implica definida positiva si éxito)
+    // 2) Cholesky (=> A definida positiva)
     const { ok, L } = this.cholesky(A);
     this.spdOk.set(ok);
     if (!ok) {
@@ -187,7 +188,7 @@ export class CholeskiComponent {
       return;
     }
 
-    // 3) Resolver: A x = b -> L y = b, (Lᵀ) x = y
+    // 3) Resolver: L y = b, (Lᵀ) x = y
     const y = this.forwardSubst(L, b);
     const x = this.backSubstLt(L, y);
 
@@ -196,5 +197,24 @@ export class CholeskiComponent {
     this.L.set(L);
     this.U.set(this.transpose(L));
     this.message.set('✔ Sistema resuelto con éxito por Cholesky.');
+  }
+
+  // Ejemplo rápido (SPD)
+  fillExample(): void {
+    // SPD clásico
+    const A = [
+      [4, 1, 1, 0, 6],
+      [1, 3, 0, 1, 5],
+      [1, 0, 2, -1, 1],
+      [0, 1, -1, 2, 1],
+    ];
+    this.tempMatrix.set(A.map((r) => [...r]));
+    this.matrix.set(this.zeros(4, 5));
+    this.solutions.set([]);
+    this.L.set([]);
+    this.U.set([]);
+    this.symOk.set(null);
+    this.spdOk.set(null);
+    this.message.set('⚙ Ejemplo cargado. Presiona “Resolver Sistema”.');
   }
 }

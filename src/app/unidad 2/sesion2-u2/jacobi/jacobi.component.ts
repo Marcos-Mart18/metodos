@@ -13,13 +13,29 @@ export class JacobiComponent {
   matrix = signal<number[][]>([]);
   tempMatrix = signal<number[][]>([]);
   x0 = signal<number[]>([]);
-  tol = signal<number>(1e-6);
+  tol = signal<number>(1e-6); // ε ingresado como fracción (ej: 1e-4)
   maxIter = signal<number>(200);
 
   solution = signal<number[]>([]);
-  iterations = signal<{ k: number; x: number[]; err: number }[]>([]);
+  // ⬇️ Log SIN error global
+  iterations = signal<{ k: number; x: number[]; fx: number[]; e: number[] }[]>(
+    []
+  );
   message = signal<string | null>(null);
   diagDominant = signal<boolean | null>(null);
+
+  // Paginación para la tabla de iteraciones (estilo Bisección)
+  page = signal<number>(1);
+  pageSize = signal<number>(10);
+  totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.iterations().length / this.pageSize()))
+  );
+  pagedIterations = computed(() => {
+    const p = this.page();
+    const s = this.pageSize();
+    const start = (p - 1) * s;
+    return this.iterations().slice(start, start + s);
+  });
 
   messageClass = computed(() => {
     const m = this.message();
@@ -43,11 +59,6 @@ export class JacobiComponent {
   }
   private zeros(n: number, m: number): number[][] {
     return Array.from({ length: n }, () => Array(m).fill(0));
-  }
-  private normInf(v: number[]): number {
-    let m = 0;
-    for (const x of v) m = Math.max(m, Math.abs(x));
-    return m;
   }
   private sub(a: number[], b: number[]): number[] {
     return a.map((ai, i) => ai - b[i]);
@@ -104,6 +115,7 @@ export class JacobiComponent {
     this.x0.set(Array(n).fill(0));
     this.solution.set([]);
     this.iterations.set([]);
+    this.page.set(1); // reset paginación
     this.message.set(null);
     this.diagDominant.set(null);
   }
@@ -125,22 +137,23 @@ export class JacobiComponent {
       if (diag < sum - 1e-14) return false; // no dominante
       if (diag > sum + 1e-14) hasStrict = true; // estricta en alguna fila
     }
-    return hasStrict; // dominante y estricta en al menos una fila
+    return hasStrict;
   }
 
-  // Jacobi core
+  // Jacobi core (SIN error global; paro por "todas cumplen")
   private jacobi(
     A: number[][],
     b: number[],
     x0: number[],
-    tol: number,
+    tol: number, // ε (fracción), se compara contra e[%] como tol*100
     maxIter: number
   ) {
     const n = A.length;
     let x = [...x0];
-    const log: { k: number; x: number[]; err: number }[] = [];
+    const log: { k: number; x: number[]; fx: number[]; e: number[] }[] = [];
 
     for (let k = 1; k <= maxIter; k++) {
+      // Jacobi: x^(k+1)
       const xNew = new Array(n).fill(0);
       for (let i = 0; i < n; i++) {
         let s = 0;
@@ -148,14 +161,34 @@ export class JacobiComponent {
         xNew[i] = (b[i] - s) / A[i][i];
       }
 
+      // Δx y errores por-variable e_i (%)
       const dx = this.sub(xNew, x);
-      const err = this.normInf(dx) / Math.max(this.normInf(xNew), this.EPS);
+      const e: number[] = new Array(n);
+      for (let i = 0; i < n; i++) {
+        e[i] = (Math.abs(dx[i]) / Math.max(Math.abs(xNew[i]), this.EPS)) * 100;
+      }
 
-      log.push({ k, x: [...xNew], err });
+      // Residuales por ecuación: fx = A*xNew - b
+      const fx: number[] = new Array(n).fill(0);
+      for (let i = 0; i < n; i++) {
+        let aiDotX = 0;
+        for (let j = 0; j < n; j++) aiDotX += A[i][j] * xNew[j];
+        fx[i] = aiDotX - b[i];
+      }
+
+      // Guardar iteración
+      log.push({ k, x: [...xNew], fx, e });
+
+      // Paro por "todas cumplen"
+      const tolPct = tol * 100;
+      if (e.every((v) => v <= tolPct)) {
+        return { ok: true as const, x: xNew, log, k };
+      }
+
+      // Siguiente
       x = xNew;
-
-      if (err <= tol) return { ok: true as const, x, log, k };
     }
+
     return { ok: false as const, x, log, k: maxIter };
   }
 
@@ -178,8 +211,9 @@ export class JacobiComponent {
     if (this.hasZeroDiagonal(A)) {
       this.solution.set([]);
       this.iterations.set([]);
+      this.page.set(1);
       this.message.set(
-        '✖ Hay ceros en la diagonal. Reordena filas/columnas o usa otro método.'
+        '✖ Hay ceros en la diagonal. Reordena o usa otro método.'
       );
       this.diagDominant.set(null);
       return;
@@ -188,7 +222,6 @@ export class JacobiComponent {
     const dominant = this.isDiagonallyDominant(A);
     this.diagDominant.set(dominant);
     if (!dominant) {
-      // Advertimos pero seguimos
       this.message.set(
         '⚠ A no es diagonalmente dominante estricta. Jacobi podría no converger.'
       );
@@ -205,8 +238,12 @@ export class JacobiComponent {
     );
     this.solution.set(x);
     this.iterations.set(log);
+    this.page.set(1); // reset paginación al resolver
+
     if (ok) {
-      this.message.set(`✔ Convergió en k = ${k} iteraciones.`);
+      this.message.set(
+        `✔ Convergió en k = ${k} iteraciones (criterio: todas las variables ≤ ε).`
+      );
     } else {
       this.message.set(
         `⚠ No convergió en ${k} iteraciones. Prueba reducir ε, aumentar iteraciones o reordenar A.`
@@ -214,10 +251,16 @@ export class JacobiComponent {
     }
   }
 
+  // Paginación (botones)
+  changePage(p: number): void {
+    if (p < 1 || p > this.totalPages()) return;
+    this.page.set(p);
+  }
+
   // Ejemplo rápido (dominante)
   fillExample(): void {
     const A = [
-      [10, -1, 2, 0, 6], // fila 1 (a11..a1n | b1)
+      [10, -1, 2, 0, 6], // a11..a1n | b1
       [-1, 11, -1, 3, 25],
       [2, -1, 10, -1, -11],
       [0, 3, -1, 8, 15],
@@ -229,6 +272,7 @@ export class JacobiComponent {
     this.maxIter.set(200);
     this.solution.set([]);
     this.iterations.set([]);
+    this.page.set(1);
     this.message.set('⚙ Ejemplo cargado. Presiona “Resolver”.');
     this.diagDominant.set(null);
   }
