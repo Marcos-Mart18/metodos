@@ -8,8 +8,7 @@ const math = create(all);
 @Component({
   selector: 'app-newtonn',
   imports: [RouterLink, CommonModule, FormsModule],
-  templateUrl: './newtonn.component.html',
-  styleUrl: './newtonn.component.css',
+  templateUrl: './newtonn.component.html'
 })
 export class NewtonnComponent implements OnInit {
   ecuacion: string = '';

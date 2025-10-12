@@ -22,8 +22,7 @@ type Step = {
   selector: 'app-simplex',
   standalone: true,
   templateUrl: './simplex.component.html',
-  imports: [CommonModule, FormsModule, NgFor, NgIf, RouterLink],
-  styleUrls: ['./simplex.component.css'],
+  imports: [CommonModule, FormsModule, NgFor, NgIf, RouterLink]
 })
 export class SimplexComponent implements OnInit {
   // Estado
