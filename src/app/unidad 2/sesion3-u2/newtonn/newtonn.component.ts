@@ -66,6 +66,9 @@ export class NewtonnComponent implements OnInit {
 
       // Calcular el error relativo
       error = Math.abs((xk1 - xk) / xk1) * 100;
+      if (error > 100) {
+        error = math.abs(xk1 - xk) * 100;
+      }
 
       // Añadir el resultado de la iteración al array
       this.resultados.push({
