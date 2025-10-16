@@ -24,6 +24,9 @@ import { GradienteComponent } from './unidad 2/sesion3-u2/gradiente/gradiente.co
 import { SimplexComponent } from './unidad 2/sesion3-u2/simplex/simplex.component';
 import { Sesion4U2Component } from './unidad 2/sesion4-u2/sesion4-u2.component';
 import { MinCuadradosComponent } from './unidad 2/sesion4-u2/min-cuadrados/min-cuadrados.component';
+import { Sesion5U2Component } from './unidad 2/sesion5-u2/sesion5-u2.component';
+import { LagrangeComponent } from './unidad 2/sesion5-u2/lagrange/lagrange.component';
+import { DfdnewtonComponent } from './unidad 2/sesion5-u2/dfdnewton/dfdnewton.component';
 
 export const routes: Routes = [
   {
@@ -130,6 +133,18 @@ export const routes: Routes = [
   {
     path: 'cuadrados',
     component: MinCuadradosComponent,
+  },
+  {
+    path: 'sesion9',
+    component: Sesion5U2Component,
+  },
+  {
+    path: 'lagrange',
+    component: LagrangeComponent,
+  },
+  {
+    path: 'dfdnewton',
+    component: DfdnewtonComponent,
   },
   {
     path: '**',
