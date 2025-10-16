@@ -17,7 +17,7 @@ declare global {
 @Component({
   selector: 'app-min-cuadrados',
   standalone: true,
-  imports: [CommonModule, FormsModule,RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './min-cuadrados.component.html'
 })
 export class MinCuadradosComponent {
@@ -77,7 +77,6 @@ export class MinCuadradosComponent {
   }
 
   private async typesetMath(): Promise<void> {
-    // asegura que el bloque con *ngIf ya esté en el DOM
     this.cdr.detectChanges();
     await this.nextFrame();
     const MJ = await this.waitForMathJax();
@@ -95,7 +94,6 @@ export class MinCuadradosComponent {
   }
 
   private async ensureGeoGebraInjected(): Promise<boolean> {
-    // Solo cuando el contenedor exista (está dentro de *ngIf)
     await this.nextFrame();
     const host = this.ggbHost?.nativeElement;
     if (!host) return false;
@@ -126,7 +124,6 @@ export class MinCuadradosComponent {
       await this.waitForGgbApplet();
     }
 
-    // si aún no disparó appletOnLoad, espera brevemente
     if (!this.ggbReady) {
       await new Promise(res => setTimeout(res, 100));
     }
@@ -153,6 +150,111 @@ export class MinCuadradosComponent {
     this.formulaB0TeX = this.formulaB1TeX = this.ecuacionTeX = this.sxxMsgTeX = '';
     this.sxxCero = this.insuficiente = false;
     this.calculado = false;
+  }
+
+  // ------------- Importar Excel/CSV -------------
+  async onExcelFileSelected(evt: Event): Promise<void> {
+    const input = evt.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const XLSX = await import('xlsx');
+
+      const wb = XLSX.read(buffer, { type: 'array' });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      if (!ws) throw new Error('No se encontró hoja en el archivo.');
+
+      // header:1 -> filas como arrays
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, blankrows: false });
+      if (!rows.length) throw new Error('La hoja está vacía.');
+
+      const first = rows[0]?.map((c: any) => (c ?? '').toString().trim().toLowerCase());
+      let dataRows: any[][] = rows;
+      let xIdx = 0, yIdx = 1;
+
+      const idxOf = (arr: string[], key: string) => arr.findIndex(h => h.replace(/\s+/g, '') === key);
+
+      const looksHeader = first && (idxOf(first, 'x') !== -1 || idxOf(first, 'y') !== -1);
+      if (looksHeader) {
+        const fx = idxOf(first, 'x');
+        const fy = idxOf(first, 'y');
+        if (fx !== -1) xIdx = fx;
+        if (fy !== -1) yIdx = fy;
+        dataRows = rows.slice(1);
+      } else {
+        xIdx = 0; yIdx = 1;
+      }
+
+      const parseNum = (v: any): number | null => {
+        if (v === null || v === undefined || v === '') return null;
+        if (typeof v === 'string') v = v.replace(',', '.');
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const parsed: Fila[] = [];
+      for (const r of dataRows) {
+        if (!r) continue;
+        const x = parseNum(r[xIdx]);
+        const y = parseNum(r[yIdx]);
+        if (x === null && y === null) continue;
+        parsed.push({ x, y });
+      }
+
+      if (parsed.length === 0) {
+        throw new Error('No se encontraron pares (x, y) válidos.');
+      }
+
+      this.filas = parsed;
+      this.resetResultados();
+
+      // Si quieres calcular automáticamente:
+      // await this.calcularYMostrar();
+
+      input.value = ''; // permitir re-subir el mismo archivo
+    } catch (err: any) {
+      console.error(err);
+      alert('No se pudo importar el archivo: ' + (err?.message || 'Error desconocido'));
+    }
+  }
+
+  // ------------- Descargar plantilla (XLSX/CSV) -------------
+  async onDownloadTemplate(format: 'xlsx' | 'csv' = 'xlsx'): Promise<void> {
+    const headers = ['x', 'y'];
+    const sampleRows = [
+      [1, 1.2],
+      [2, 1.9],
+      [3, 3.2],
+      [4, 3.9],
+    ];
+
+    if (format === 'csv') {
+      const lines = [headers.join(','), ...sampleRows.map(r => r.join(','))];
+      const csv = lines.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plantilla_regresion_simple.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // XLSX
+    const XLSX = await import('xlsx');
+    const aoa = [headers, ...sampleRows];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 10 }, { wch: 10 }]; // ancho de columnas
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+    XLSX.writeFile(wb, 'plantilla_regresion_simple.xlsx');
   }
 
   // ------------- Cálculo + Render -------------
@@ -221,15 +323,12 @@ export class MinCuadradosComponent {
       \hat{y} = ${b0s} + ${b1s}\,x
     \]`;
 
-    // 1) mostrar panel y tipografiar al primer click
     this.calculado = true;
     await this.typesetMath();
 
-    // 2) inyectar GeoGebra si aún no existe (el div recién apareció)
     const ok = await this.ensureGeoGebraInjected();
     if (!ok) return;
 
-    // 3) dibujar
     if (this.ggbReady) {
       const g = window.ggbApplet;
       g.reset();
