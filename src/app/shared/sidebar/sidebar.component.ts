@@ -27,7 +27,7 @@ export class SidebarComponent {
         { id: 6, nombre: 'Sesión 2' },
         { id: 7, nombre: 'Sesión 3' },
         { id: 8, nombre: 'Sesión 4' },
-        // { id: 9, nombre: 'Sesión 5' }
+        { id: 9, nombre: 'Sesión 5' }
       ],
     },
     {
