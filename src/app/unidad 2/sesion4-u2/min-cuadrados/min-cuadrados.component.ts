@@ -17,7 +17,7 @@ declare global {
 @Component({
   selector: 'app-min-cuadrados',
   standalone: true,
-  imports: [CommonModule, FormsModule,RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './min-cuadrados.component.html'
 })
 export class MinCuadradosComponent {
@@ -153,6 +153,76 @@ export class MinCuadradosComponent {
     this.formulaB0TeX = this.formulaB1TeX = this.ecuacionTeX = this.sxxMsgTeX = '';
     this.sxxCero = this.insuficiente = false;
     this.calculado = false;
+  }
+
+  // ------------- Importar Excel/CSV -------------
+  async onExcelFileSelected(evt: Event): Promise<void> {
+    const input = evt.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    try {
+      const buffer = await file.arrayBuffer();
+      const XLSX = await import('xlsx');
+
+      const wb = XLSX.read(buffer, { type: 'array' });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      if (!ws) throw new Error('No se encontró hoja en el archivo.');
+
+      // header:1 -> filas como arrays
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, blankrows: false });
+      if (!rows.length) throw new Error('La hoja está vacía.');
+
+      const first = rows[0]?.map((c: any) => (c ?? '').toString().trim().toLowerCase());
+      let dataRows: any[][] = rows;
+      let xIdx = 0, yIdx = 1;
+
+      const idxOf = (arr: string[], key: string) => arr.findIndex(h => h.replace(/\s+/g, '') === key);
+
+      const looksHeader = first && (idxOf(first, 'x') !== -1 || idxOf(first, 'y') !== -1);
+      if (looksHeader) {
+        const fx = idxOf(first, 'x');
+        const fy = idxOf(first, 'y');
+        if (fx !== -1) xIdx = fx;
+        if (fy !== -1) yIdx = fy;
+        dataRows = rows.slice(1);
+      } else {
+        xIdx = 0; yIdx = 1;
+      }
+
+      const parseNum = (v: any): number | null => {
+        if (v === null || v === undefined || v === '') return null;
+        if (typeof v === 'string') v = v.replace(',', '.');
+        const n = Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+
+      const parsed: Fila[] = [];
+      for (const r of dataRows) {
+        if (!r) continue;
+        const x = parseNum(r[xIdx]);
+        const y = parseNum(r[yIdx]);
+        if (x === null && y === null) continue;
+        parsed.push({ x, y });
+      }
+
+      if (parsed.length === 0) {
+        throw new Error('No se encontraron pares (x, y) válidos.');
+      }
+
+      this.filas = parsed;
+      this.resetResultados();
+
+      // Si quieres calcular automáticamente:
+      // await this.calcularYMostrar();
+
+      // permite volver a subir el mismo archivo
+      input.value = '';
+    } catch (err: any) {
+      console.error(err);
+      alert('No se pudo importar el archivo: ' + (err?.message || 'Error desconocido'));
+    }
   }
 
   // ------------- Cálculo + Render -------------
