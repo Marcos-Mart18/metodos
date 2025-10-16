@@ -212,8 +212,8 @@ export class MinCuadradosComponent {
     \]`;
 
     this.formulaB0TeX = String.raw`\[
-      \hat{\beta}_0=\frac{\sum y-\hat{\beta}_1\sum x}{n}
-      =\frac{${sY}-${b1s}\,${sX}}{${n}}
+      \hat{\beta}_0=\frac{\sum y-(\hat{\beta}_1)(\sum x)}{n}
+      =\frac{${sY}-(${b1s})\,(${sX})}{${n}}
       = ${b0s}
     \]`;
 
