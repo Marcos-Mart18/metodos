@@ -85,31 +85,53 @@
       </div>
   
       <!-- Resultados: Fórmulas (MathJax) + GeoGebra -->
-<div class="grid lg:grid-cols-2 gap-6" *ngIf="calculado">
-    <div class="border border-gray-200 rounded-xl p-4" #mathHost>
-      <h4 class="font-bold text-[#001C48] mb-2">Cálculo de coeficientes práctico</h4>
-  
-      <div class="text-sm" [innerHTML]="formulaB1TeX"></div>
-      <div class="text-sm mt-2" [innerHTML]="formulaB0TeX"></div>
-  
-      <div class="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900">
-        <div class="font-semibold mb-1">Modelo estimado:</div>
-        <div class="text-sm" [innerHTML]="ecuacionTeX"></div>
+      <div class="flex flex-col gap-6" *ngIf="calculado">
+        <!-- Card: Cálculo de coeficientes práctico -->
+        <div class="border border-gray-200 rounded-xl p-4 pb-3">
+          <h4 class="font-bold text-[#001C48] mb-2">Cálculo de coeficientes práctico</h4>
+      
+          <!-- Fórmulas con scroll horizontal si exceden el ancho -->
+          <div
+            class="text-xs sm:text-sm leading-tight overflow-x-auto max-w-full px-1
+                   [&_.katex-display]:my-1 [&_.katex-display]:last:mb-0"
+            [innerHTML]="formulaB1TeX">
+          </div>
+      
+          <div
+            class="text-xs sm:text-sm leading-tight mt-2 overflow-x-auto max-w-full px-1
+                   [&_.katex-display]:my-1 [&_.katex-display]:last:mb-0"
+            [innerHTML]="formulaB0TeX">
+          </div>
+      
+          <div class="mt-4 p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900">
+            <div class="font-semibold mb-1">Modelo estimado:</div>
+            <div
+              class="text-xs sm:text-sm leading-tight overflow-x-auto max-w-full px-1
+                     [&_.katex-display]:my-1 [&_.katex-display]:last:mb-0"
+              [innerHTML]="ecuacionTeX">
+            </div>
+          </div>
+      
+          <div *ngIf="sxxCero" class="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm">
+            <div
+              class="overflow-x-auto max-w-full px-1
+                     [&_.katex-display]:my-1 [&_.katex-display]:last:mb-0"
+              [innerHTML]="sxxMsgTeX">
+            </div>
+          </div>
+      
+          <div *ngIf="insuficiente" class="mt-3 p-3 rounded-lg bg-orange-50 border border-orange-200 text-orange-900 text-sm">
+            Ingresa al menos dos pares (x, y) válidos.
+          </div>
+        </div>
+      
+        <!-- Card: Gráfico -->
+        <div class="border border-gray-200 rounded-xl p-4">
+          <h4 class="font-bold text-[#001C48] mb-2">Gráfico (GeoGebra): puntos y recta</h4>
+          <div #ggbHost class="h-80 w-full" id="ggb-element"></div>
+        </div>
       </div>
-  
-      <div *ngIf="sxxCero" class="mt-3 p-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-900 text-sm">
-        <div [innerHTML]="sxxMsgTeX"></div>
-      </div>
-      <div *ngIf="insuficiente" class="mt-3 p-3 rounded-lg bg-orange-50 border border-orange-200 text-orange-900 text-sm">
-        Ingresa al menos dos pares (x, y) válidos.
-      </div>
-    </div>
-  
-    <div class="border border-gray-200 rounded-xl p-4">
-      <h4 class="font-bold text-[#001C48] mb-2">Gráfico (GeoGebra): puntos y recta</h4>
-      <div #ggbHost class="h-80 w-full" id="ggb-element"></div>
-    </div>
-  </div>
+      
   
   
     </div>
