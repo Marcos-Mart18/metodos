@@ -93,6 +93,11 @@ export class MinCuadradosComponent {
     });
   }
 
+  /**
+   * Inyecta o re-inyecta el applet si:
+   *  - Nunca se inyectó, o
+   *  - El host NO contiene el iframe (fue destruido/recreado por el DOM).
+   */
   private async ensureGeoGebraInjected(): Promise<boolean> {
     await this.nextFrame();
     const host = this.ggbHost?.nativeElement;
@@ -100,7 +105,11 @@ export class MinCuadradosComponent {
 
     if (!host.id) host.id = 'ggb-element';
 
-    if (!this.ggbInjected) {
+    const iframe = host.querySelector('iframe');
+    const needsInjection = !this.ggbInjected || !iframe;
+
+    if (needsInjection) {
+      this.ggbReady = false;
       const app = new window.GGBApplet(
         {
           appName: 'graphing',
@@ -141,6 +150,7 @@ export class MinCuadradosComponent {
   limpiar(): void {
     this.filas = [{ x: null, y: null }];
     this.resetResultados();
+    // NO destruimos el host, así que no hace falta re-inyectar aquí.
     if (this.ggbReady) window.ggbApplet?.reset();
   }
   private resetResultados(): void {
@@ -167,7 +177,6 @@ export class MinCuadradosComponent {
       const ws = wb.Sheets[sheetName];
       if (!ws) throw new Error('No se encontró hoja en el archivo.');
 
-      // header:1 -> filas como arrays
       const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, blankrows: false });
       if (!rows.length) throw new Error('La hoja está vacía.');
 
@@ -211,7 +220,7 @@ export class MinCuadradosComponent {
       this.filas = parsed;
       this.resetResultados();
 
-      // Si quieres calcular automáticamente:
+      // (Opcional) calcular automáticamente tras importación:
       // await this.calcularYMostrar();
 
       input.value = ''; // permitir re-subir el mismo archivo
@@ -246,11 +255,10 @@ export class MinCuadradosComponent {
       return;
     }
 
-    // XLSX
     const XLSX = await import('xlsx');
     const aoa = [headers, ...sampleRows];
     const ws = XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols'] = [{ wch: 10 }, { wch: 10 }]; // ancho de columnas
+    ws['!cols'] = [{ wch: 10 }, { wch: 10 }];
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Datos');
@@ -298,7 +306,6 @@ export class MinCuadradosComponent {
     this.b1 = numer / denom;
     this.b0 = (this.sumY - (this.b1 * this.sumX)) / this.n;
 
-    // strings redondeados
     const n = this.n;
     const sX  = this.f(this.sumX);
     const sY  = this.f(this.sumY);
@@ -323,12 +330,15 @@ export class MinCuadradosComponent {
       \hat{y} = ${b0s} + ${b1s}\,x
     \]`;
 
+    // 1) mostrar panel y tipografiar
     this.calculado = true;
     await this.typesetMath();
 
+    // 2) asegurar applet (re-inyección si hizo falta)
     const ok = await this.ensureGeoGebraInjected();
     if (!ok) return;
 
+    // 3) dibujar
     if (this.ggbReady) {
       const g = window.ggbApplet;
       g.reset();
