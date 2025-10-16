@@ -77,7 +77,6 @@ export class MinCuadradosComponent {
   }
 
   private async typesetMath(): Promise<void> {
-    // asegura que el bloque con *ngIf ya esté en el DOM
     this.cdr.detectChanges();
     await this.nextFrame();
     const MJ = await this.waitForMathJax();
@@ -95,7 +94,6 @@ export class MinCuadradosComponent {
   }
 
   private async ensureGeoGebraInjected(): Promise<boolean> {
-    // Solo cuando el contenedor exista (está dentro de *ngIf)
     await this.nextFrame();
     const host = this.ggbHost?.nativeElement;
     if (!host) return false;
@@ -126,7 +124,6 @@ export class MinCuadradosComponent {
       await this.waitForGgbApplet();
     }
 
-    // si aún no disparó appletOnLoad, espera brevemente
     if (!this.ggbReady) {
       await new Promise(res => setTimeout(res, 100));
     }
@@ -217,12 +214,47 @@ export class MinCuadradosComponent {
       // Si quieres calcular automáticamente:
       // await this.calcularYMostrar();
 
-      // permite volver a subir el mismo archivo
-      input.value = '';
+      input.value = ''; // permitir re-subir el mismo archivo
     } catch (err: any) {
       console.error(err);
       alert('No se pudo importar el archivo: ' + (err?.message || 'Error desconocido'));
     }
+  }
+
+  // ------------- Descargar plantilla (XLSX/CSV) -------------
+  async onDownloadTemplate(format: 'xlsx' | 'csv' = 'xlsx'): Promise<void> {
+    const headers = ['x', 'y'];
+    const sampleRows = [
+      [1, 1.2],
+      [2, 1.9],
+      [3, 3.2],
+      [4, 3.9],
+    ];
+
+    if (format === 'csv') {
+      const lines = [headers.join(','), ...sampleRows.map(r => r.join(','))];
+      const csv = lines.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'plantilla_regresion_simple.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    // XLSX
+    const XLSX = await import('xlsx');
+    const aoa = [headers, ...sampleRows];
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = [{ wch: 10 }, { wch: 10 }]; // ancho de columnas
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Datos');
+    XLSX.writeFile(wb, 'plantilla_regresion_simple.xlsx');
   }
 
   // ------------- Cálculo + Render -------------
@@ -291,15 +323,12 @@ export class MinCuadradosComponent {
       \hat{y} = ${b0s} + ${b1s}\,x
     \]`;
 
-    // 1) mostrar panel y tipografiar al primer click
     this.calculado = true;
     await this.typesetMath();
 
-    // 2) inyectar GeoGebra si aún no existe (el div recién apareció)
     const ok = await this.ensureGeoGebraInjected();
     if (!ok) return;
 
-    // 3) dibujar
     if (this.ggbReady) {
       const g = window.ggbApplet;
       g.reset();

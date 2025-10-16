@@ -92,12 +92,51 @@
                  (change)="onExcelFileSelected($event)">
         </label>
 
+        <!-- Descargar plantilla -->
+        <div class="relative inline-flex items-center gap-2">
+          <button class="px-4 py-2 rounded-md bg-sky-600 text-white hover:opacity-95"
+                  (click)="onDownloadTemplate('xlsx')">
+            Descargar plantilla (XLSX)
+          </button>
+          <button class="px-3 py-2 rounded-md border border-gray-300 hover:bg-gray-50"
+                  (click)="onDownloadTemplate('csv')">
+            CSV
+          </button>
+        </div>
+
         <button class="px-4 py-2 rounded-md bg-[#003366] text-white hover:opacity-95" (click)="calcularYMostrar()">Calcular y graficar</button>
       </div>
 
       <p class="text-xs text-gray-500 mt-1">
         Formato esperado: columnas <b>x</b> y <b>y</b> (con o sin encabezado). También se admite CSV. Se ignoran filas vacías.
       </p>
+
+      <!-- Ayuda para preparar el Excel -->
+      <details class="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+        <summary class="cursor-pointer text-sm font-semibold text-slate-700">¿Cómo preparar el archivo Excel/CSV?</summary>
+        <div class="mt-2 text-sm text-gray-700 space-y-2">
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Crea una hoja con dos columnas llamadas <b>x</b> y <b>y</b> (en minúscula).</li>
+            <li>Coloca tus datos numéricos debajo de cada encabezado. Ejemplo:
+              <div class="mt-1 overflow-x-auto">
+                <table class="text-xs border">
+                  <thead class="bg-gray-100">
+                    <tr><th class="px-2 py-1 border">x</th><th class="px-2 py-1 border">y</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td class="px-2 py-1 border">1</td><td class="px-2 py-1 border">1.2</td></tr>
+                    <tr><td class="px-2 py-1 border">2</td><td class="px-2 py-1 border">1.9</td></tr>
+                    <tr><td class="px-2 py-1 border">3</td><td class="px-2 py-1 border">3.2</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </li>
+            <li>Puedes omitir los encabezados y dejar solo dos columnas: la primera será <b>x</b> y la segunda <b>y</b>.</li>
+            <li>Para decimales, usa punto (<code>.</code>) o coma (<code>,</code>); el importador convierte coma a punto.</li>
+            <li>Evita celdas con texto o vacías entre números; las filas completamente vacías se ignoran.</li>
+          </ul>
+        </div>
+      </details>
     </div>
 
     <!-- Resultados: Fórmulas (MathJax) + GeoGebra -->
