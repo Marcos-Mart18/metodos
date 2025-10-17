@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 type Point = { x: number; y: number };
 
 @Component({
   selector: 'app-lagrange',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './lagrange.component.html',
   styleUrls: ['./lagrange.component.css'],
 })
@@ -17,6 +18,7 @@ export class LagrangeComponent {
   decimals = 4;
   error: string | null = null;
   calculado = false;
+  showSteps = true;
 
   // Texto (listas X e Y)
   xText = '';
@@ -38,6 +40,9 @@ export class LagrangeComponent {
   tEval: number | null = null;
   pEval: number | null = null;
 
+  // LaTeX (pasos)
+  latexSteps: string[] = [];
+
   // ========= Acciones UI =========
   addRow() { this.points.push({ x: null, y: null }); }
   removeRow(i: number) { this.points.splice(i, 1); }
@@ -53,6 +58,8 @@ export class LagrangeComponent {
     this.pEval = null;
     this.error = null;
     this.calculado = false;
+    this.latexSteps = [];
+    this.typeset(); // limpiar render
   }
 
   // ========= Cálculo principal =========
@@ -85,24 +92,38 @@ export class LagrangeComponent {
     this.polyString = this.formatPolynomial(this.coeffs, 'x', this.decimals);
     this.calculado = true;
 
+    // Construir pasos LaTeX
+    this.latexSteps = this.buildLatexSteps(pts, this.coeffs);
     this.evaluate(); // si ya hay un t cargado, actualiza P(t)
+    this.typeset();
   }
 
   evaluate() {
     if (this.tEval === null || isNaN(Number(this.tEval)) || !this.calculado) {
       this.pEval = null;
+      // Actualiza pasos (sin evaluación)
+      this.typeset();
       return;
     }
     this.pEval = this.polyEval(this.coeffs, Number(this.tEval));
+
+    // Agrega/actualiza paso de evaluación
+    if (this.calculado) {
+      const t = Number(this.tEval);
+      const val = this.formatNum(this.pEval);
+      const evalLatex = `$$\\displaystyle P(${this.numLatex(t)})= ${this.numLatex(Number(val))}.$$`;
+      // Si el último paso es de evaluación, reemplázalo; si no, añádelo.
+      const idx = this.latexSteps.findIndex(s => s.includes('P(') && s.includes(')='));
+      if (idx >= 0) this.latexSteps[idx] = evalLatex;
+      else this.latexSteps.push(evalLatex);
+      this.typeset();
+    }
   }
 
   // ========= Entrada texto / tabla =========
   parseTextPoints(): Point[] {
     const split = (s: string) =>
-      s.trim()
-        .split(/[,\s;]+/g)
-        .filter(Boolean)
-        .map(v => Number(v));
+      s.trim().split(/[,\s;]+/g).filter(Boolean).map(v => Number(v));
 
     const X = split(this.xText);
     const Y = split(this.yText);
@@ -238,5 +259,95 @@ export class LagrangeComponent {
 
   formatNum(n: number): string {
     return Number(n).toFixed(this.decimals);
+  }
+
+  // ========= Construcción de pasos LaTeX =========
+  private buildLatexSteps(points: Point[], coeffs: number[]): string[] {
+    const n = points.length - 1;
+    const xs = points.map(p => p.x);
+    const ys = points.map(p => p.y);
+
+    const num = (v: number) => this.numLatex(v);
+    const listPairs = xs.map((x, i) => `(x_{${i}},y_{${i}})=(${num(x)},\\,${num(ys[i])})`).join(',\\; ');
+
+    const steps: string[] = [];
+
+    // Paso 1: Datos
+    steps.push(`$$\\textbf{Paso 1. Datos ordenados:}\\quad ${listPairs}.$$`);
+
+    // Paso 2: Fórmula general
+    steps.push(
+      `$$\\textbf{Paso 2. Fórmula general de Lagrange:}\\quad
+      P_{${n}}(x)=\\sum_{i=0}^{${n}} y_i\\,L_i(x),\\qquad
+      L_i(x)=\\prod_{\\substack{j=0\\\\ j\\ne i}}^{${n}} \\frac{x-x_j}{x_i-x_j}.$$`
+    );
+
+    // Paso 3: Cada base L_i(x) con valores
+    for (let i = 0; i <= n; i++) {
+      const numFactors: string[] = [];
+      const denFactors: string[] = [];
+      let denomVal = 1;
+      for (let j = 0; j <= n; j++) {
+        if (i === j) continue;
+        numFactors.push(`(x-${num(xs[j])})`);
+        denFactors.push(`(${num(xs[i])}-${num(xs[j])})`);
+        denomVal *= (xs[i] - xs[j]);
+      }
+      const numStr = numFactors.join('');
+      const denStr = denFactors.join('');
+      const denValStr = this.numLatex(denomVal);
+
+      steps.push(
+        `$$\\displaystyle \\textbf{Paso 3.${i+1}.}\\; L_${i}(x)
+        =\\frac{${numStr}}{${denStr}}
+        =\\frac{${numStr}}{${denValStr}}.$$`
+      );
+
+      // y_i * L_i(x)
+      const ci = ys[i] / denomVal;
+      const ciStr = this.numLatex(ci);
+      steps.push(
+        `$$\\displaystyle y_${i}\\,L_${i}(x)
+        = \\frac{y_${i}}{\\prod_{\\substack{j=0\\\\ j\\ne i}}^{${n}}(x_i-x_j)}\\,\\prod_{\\substack{j=0\\\\ j\\ne i}}^{${n}}(x-x_j)
+        = ${ciStr}\\,${numStr}.$$`
+      );
+    }
+
+    // Paso 4: Suma final (forma de Lagrange con coef c_i ya numéricos)
+    const terms = xs.map((_, i) => {
+      let denomVal = 1;
+      const factors: string[] = [];
+      for (let j = 0; j <= n; j++) {
+        if (i === j) continue;
+        denomVal *= (xs[i] - xs[j]);
+        factors.push(`(x-${num(xs[j])})`);
+      }
+      const ci = ys[i] / denomVal;
+      return `${this.numLatex(ci)}\\,${factors.join('')}`;
+    }).join(' \\; + \\; ');
+
+    steps.push(`$$\\textbf{Paso 4.}\\; P(x)= ${terms}.$$`);
+
+    // Paso 5: Forma estándar (coeficientes a_k)
+    const ak = coeffs.map((c, k) => `a_{${k}}=${this.numLatex(c)}`).join(',\\; ');
+    steps.push(
+      `$$\\textbf{Paso 5. Forma estándar:}\\quad
+      P(x)=\\sum_{k=0}^{${coeffs.length-1}} a_k x^{k},\\qquad ${ak}.$$`
+    );
+
+    return steps;
+  }
+
+  // Formatea un número para LaTeX con los decimales elegidos
+  private numLatex(v: number): string {
+    return Number(v).toFixed(this.decimals).replace(/-0\.0+$/,'0');
+  }
+
+  // Re-tiposet dinámico (MathJax v3 si está disponible)
+  private typeset() {
+    // pequeña espera para que el DOM se actualice
+    setTimeout(() => {
+      (window as any)?.MathJax?.typesetPromise?.();
+    }, 0);
   }
 }
