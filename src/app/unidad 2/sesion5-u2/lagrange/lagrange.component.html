@@ -149,5 +149,27 @@
         </div>
       </div>
     </section>
+
+        <!-- Pasos (LaTeX) -->
+    <section *ngIf="calculado && latexSteps.length"
+    class="bg-white rounded-2xl shadow p-4 sm:p-6 space-y-3">
+    <div class="flex items-center justify-between">
+    <h3 class="font-semibold text-lg">Pasos (LaTeX)</h3>
+    <label class="inline-flex items-center gap-2 text-sm">
+    <input type="checkbox" [(ngModel)]="showSteps"
+        class="rounded border-gray-300">
+    Mostrar/Ocultar
+    </label>
+    </div>
+
+    <div class="space-y-3" [class.hidden]="!showSteps">
+    <div *ngFor="let s of latexSteps"
+    class="p-3 rounded-lg bg-gray-50 overflow-x-auto">
+    <!-- Tu renderizador LaTeX (MathJax/KaTeX) tomará los $$...$$ a continuación -->
+    <div [innerHTML]="s"></div>
+    </div>
+    </div>
+    </section>
+
   </div>
   

@@ -17,6 +17,7 @@ export class DfdnewtonComponent {
   decimals = 4;
   error: string | null = null;
   calculado = false;
+  sortAsc = false; // <- NUEVO: respeta el orden de entrada por defecto
 
   // Entrada por texto
   xText = '';
@@ -52,6 +53,7 @@ export class DfdnewtonComponent {
     this.decimals = 4;
     this.error = null;
     this.calculado = false;
+    this.sortAsc = false;
     this.xText = '';
     this.yText = '';
     this.points = [{ x: null, y: null }, { x: null, y: null }, { x: null, y: null }];
@@ -81,25 +83,25 @@ export class DfdnewtonComponent {
     }
 
     // Validar x distintos
-    const xs = pts.map(p => p.x);
-    const hasDup = xs.some((x, i) => xs.indexOf(x) !== i);
+    const xsCheck = pts.map(p => p.x);
+    const hasDup = xsCheck.some((x, i) => xsCheck.indexOf(x) !== i);
     if (hasDup) {
       this.error = 'Hay valores de x repetidos; se requieren x distintos.';
       this.calculado = false;
       return;
     }
 
-    // Ordenar por x
-    pts = pts.slice().sort((a, b) => a.x - b.x);
+    // Respetar orden de entrada, a menos que el usuario decida ordenar
+    if (this.sortAsc) {
+      pts = pts.slice().sort((a, b) => a.x - b.x);
+    }
     this.xs = pts.map(p => p.x);
 
     // Construir tabla de diferencias divididas
     this.ddTable = this.buildDividedDifferences(pts);
 
     // Coeficientes de Newton (a_k = ddTable[0][k])
-    this.newtonCoeffs = this.ddTable.length
-      ? this.ddTable[0].slice(0, pts.length)
-      : [];
+    this.newtonCoeffs = this.ddTable.length ? this.ddTable[0].slice(0, pts.length) : [];
 
     // Forma de Newton (string)
     this.newtonString = this.formatNewton(this.newtonCoeffs, this.xs, 'x', this.decimals);
@@ -124,10 +126,7 @@ export class DfdnewtonComponent {
   // ==== Parseo de entradas ====
   parseTextPoints(): Point[] {
     const split = (s: string) =>
-      s.trim()
-       .split(/[,\s;]+/g)
-       .filter(Boolean)
-       .map(Number);
+      s.trim().split(/[,\s;]+/g).filter(Boolean).map(Number);
 
     const X = split(this.xText);
     const Y = split(this.yText);
