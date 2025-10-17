@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 type Point = { x: number; y: number };
 
 @Component({
   selector: 'app-dfdnewton',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './dfdnewton.component.html',
   styleUrls: ['./dfdnewton.component.css']
 })
@@ -17,7 +18,8 @@ export class DfdnewtonComponent {
   decimals = 4;
   error: string | null = null;
   calculado = false;
-  sortAsc = false; // <- NUEVO: respeta el orden de entrada por defecto
+  sortAsc = false;       // respeta orden de entrada por defecto
+  showSteps = true;      // mostrar/ocultar pasos
 
   // Entrada por texto
   xText = '';
@@ -36,7 +38,7 @@ export class DfdnewtonComponent {
   newtonCoeffs: number[] = [];     // a_k = ddTable[0][k]
 
   // Polinomios
-  newtonString = '';               // forma de Newton (string)
+  newtonString = '';               // forma de Newton (texto)
   coeffsStd: number[] = [];        // forma estándar: a0 + a1 x + ...
   polyStdString = '';
   degree = 0;
@@ -44,6 +46,9 @@ export class DfdnewtonComponent {
   // Evaluación
   tEval: number | null = null;
   pEval: number | null = null;
+
+  // Pasos LaTeX
+  latexSteps: string[] = [];
 
   // ==== Acciones UI ====
   addRow() { this.points.push({ x: null, y: null }); }
@@ -54,9 +59,12 @@ export class DfdnewtonComponent {
     this.error = null;
     this.calculado = false;
     this.sortAsc = false;
+    this.showSteps = true;
+
     this.xText = '';
     this.yText = '';
     this.points = [{ x: null, y: null }, { x: null, y: null }, { x: null, y: null }];
+
     this.xs = [];
     this.ddTable = [];
     this.newtonCoeffs = [];
@@ -66,6 +74,8 @@ export class DfdnewtonComponent {
     this.degree = 0;
     this.tEval = null;
     this.pEval = null;
+    this.latexSteps = [];
+    this.typeset();
   }
 
   // ==== Calcular ====
@@ -91,7 +101,7 @@ export class DfdnewtonComponent {
       return;
     }
 
-    // Respetar orden de entrada, a menos que el usuario decida ordenar
+    // Respeta orden de entrada, a menos que el usuario decida ordenar
     if (this.sortAsc) {
       pts = pts.slice().sort((a, b) => a.x - b.x);
     }
@@ -101,9 +111,11 @@ export class DfdnewtonComponent {
     this.ddTable = this.buildDividedDifferences(pts);
 
     // Coeficientes de Newton (a_k = ddTable[0][k])
-    this.newtonCoeffs = this.ddTable.length ? this.ddTable[0].slice(0, pts.length) : [];
+    this.newtonCoeffs = this.ddTable.length
+      ? this.ddTable[0].slice(0, pts.length)
+      : [];
 
-    // Forma de Newton (string)
+    // Forma de Newton (string visible)
     this.newtonString = this.formatNewton(this.newtonCoeffs, this.xs, 'x', this.decimals);
 
     // Convertir a forma estándar (expandido)
@@ -112,15 +124,27 @@ export class DfdnewtonComponent {
     this.polyStdString = this.formatPolynomial(this.coeffsStd, 'x', this.decimals);
 
     this.calculado = true;
-    this.evaluate();
+
+    // Pasos en LaTeX
+    this.latexSteps = this.buildLatexSteps(pts, this.xs, this.ddTable, this.newtonCoeffs, this.coeffsStd);
+    this.evaluate();   // si hay t cargado, recalcula P(t) y añade paso de evaluación
+    this.typeset();
   }
 
   evaluate() {
     if (!this.calculado || this.tEval === null || isNaN(Number(this.tEval))) {
       this.pEval = null;
+      this.typeset();
       return;
     }
     this.pEval = this.newtonEval(this.newtonCoeffs, this.xs, Number(this.tEval));
+
+    // Paso de evaluación (último)
+    const evalLatex =
+      `$$\\displaystyle P(${this.num(this.tEval)})\\;=\\;${this.num(this.pEval)}.$$`;
+    const idx = this.latexSteps.findIndex(s => s.includes('P(') && s.includes(')='));
+    if (idx >= 0) this.latexSteps[idx] = evalLatex; else this.latexSteps.push(evalLatex);
+    this.typeset();
   }
 
   // ==== Parseo de entradas ====
@@ -165,7 +189,7 @@ export class DfdnewtonComponent {
     const n = points.length;
     const table: number[][] = Array.from({ length: n }, () => Array(n).fill(NaN));
 
-    // Orden 0: valores de y
+    // Orden 0: y
     for (let i = 0; i < n; i++) {
       table[i][0] = points[i].y;
     }
@@ -181,7 +205,7 @@ export class DfdnewtonComponent {
     return table;
   }
 
-  // Evaluación eficiente P(t) en forma de Newton
+  // Evaluar P(t) en forma de Newton
   newtonEval(a: number[], xs: number[], t: number): number {
     if (a.length === 0) return 0;
     let s = a[0];
@@ -195,17 +219,11 @@ export class DfdnewtonComponent {
 
   // Expandir forma Newton a estándar
   newtonToStandard(a: number[], xs: number[]): number[] {
-    // P(x) = a0 + a1(x-x0) + a2(x-x0)(x-x1) + ...
     let res: number[] = [0];
-    let basis: number[] = [1]; // empieza con 1
-
+    let basis: number[] = [1]; // 1
     for (let k = 0; k < a.length; k++) {
-      // agregar término a_k * basis
       res = this.polyAdd(res, this.polyScale(basis, a[k]));
-      // actualizar basis *= (x - x_{k})
-      if (k < a.length - 1) {
-        basis = this.polyMul(basis, [-xs[k], 1]); // (x - xk)
-      }
+      if (k < a.length - 1) basis = this.polyMul(basis, [-xs[k], 1]); // (x - xk)
     }
     return res;
   }
@@ -238,29 +256,20 @@ export class DfdnewtonComponent {
   formatPolynomial(coeffs: number[], variable: string, decimals: number): string {
     const eps = Math.pow(10, -decimals);
     const roundFix = (n: number) => (Math.abs(n) < eps ? 0 : Number(n.toFixed(decimals)));
-
     const parts: Array<{ sign: string; term: string }> = [];
     for (let k = 0; k < coeffs.length; k++) {
       let c = roundFix(coeffs[k]);
       if (c === 0) continue;
-
       const sign = c > 0 ? '+' : '-';
       const absC = Math.abs(c);
-
       let coefStr = '';
-      if (k === 0) {
-        coefStr = absC.toFixed(decimals);
-      } else {
-        coefStr = Math.abs(absC - 1) < eps ? '' : absC.toFixed(decimals) + '·';
-      }
-
+      if (k === 0) coefStr = absC.toFixed(decimals);
+      else coefStr = Math.abs(absC - 1) < eps ? '' : absC.toFixed(decimals) + '·';
       let varPart = '';
       if (k === 1) varPart = variable;
       else if (k >= 2) varPart = `${variable}^${k}`;
-
       parts.push({ sign, term: `${coefStr}${varPart}` });
     }
-
     if (parts.length === 0) return '0';
     const first = parts[0];
     let s = (first.sign === '+' ? '' : '-') + first.term;
@@ -271,34 +280,126 @@ export class DfdnewtonComponent {
   formatNewton(a: number[], xs: number[], variable: string, decimals: number): string {
     const eps = Math.pow(10, -decimals);
     const roundFix = (n: number) => (Math.abs(n) < eps ? 0 : Number(n.toFixed(decimals)));
-
     const parts: string[] = [];
     for (let k = 0; k < a.length; k++) {
       let ak = roundFix(a[k]);
       if (ak === 0) continue;
-
-      if (k === 0) {
-        parts.push(`${ak.toFixed(decimals)}`);
-        continue;
-      }
-
+      if (k === 0) { parts.push(`${ak.toFixed(decimals)}`); continue; }
       const factors: string[] = [];
       for (let j = 0; j < k; j++) {
         const xj = roundFix(xs[j]).toFixed(decimals);
-        factors.push(`(${variable} - ${xj})`);
+        factors.push(`( ${variable} - ${xj} )`);
       }
-
       const absAk = Math.abs(ak);
       const coefTok = Math.abs(absAk - 1) < eps ? '' : `${absAk.toFixed(decimals)}·`;
       const term = `${coefTok}${factors.join('·')}`;
-
       parts.push(ak > 0 ? `+ ${term}` : `- ${term}`);
     }
-
     let s = parts.join(' ');
     s = s.replace(/^\+ /, '');
     return s.length ? s : '0';
   }
 
   formatNum(n: number): string { return Number(n).toFixed(this.decimals); }
+
+  // ==== LaTeX ====
+  private buildLatexSteps(points: Point[], xs: number[], dd: number[][], a: number[], coeffsStd: number[]): string[] {
+    const n = points.length - 1;
+    const num = (v: number) => this.num(v);
+
+    const steps: string[] = [];
+
+    // Paso 1: Datos
+    const pairs = points.map((p, i) => `(x_{${i}},y_{${i}})=(${num(p.x)},\\,${num(p.y)})`).join(',\\; ');
+    steps.push(`$$\\textbf{Paso 1. Datos:}\\; ${pairs}.$$`);
+
+    // Paso 2: Definición de diferencias divididas
+    steps.push(
+      `$$\\textbf{Paso 2. Definición:}\\;
+        f[x_i]=y_i,\\quad
+        f[x_i,\\dots,x_{i+j}] = \\frac{f[x_{i+1},\\dots,x_{i+j}] - f[x_i,\\dots,x_{i+j-1}]}{x_{i+j}-x_i}.$$`
+    );
+
+    // Paso 3: Tabla de diferencias divididas (en LaTeX)
+    steps.push(this.latexDDTable(xs, dd));
+
+    // Paso 4: Coeficientes de Newton y forma
+    const akList = a.map((v, k) => `a_{${k}} = f[x_0,\\dots,x_{${k}}] = ${num(v)}`).join(',\\; ');
+    const newtonSymbolic =
+      Array.from({ length: a.length }, (_, k) => {
+        if (k === 0) return 'a_0';
+        const facs = Array.from({ length: k }, (__ , j) => `(x-x_{${j}})`).join('');
+        return `a_${k}${facs}`;
+      }).join(' + ');
+
+    const newtonNumeric =
+      a.map((ak, k) => {
+        if (k === 0) return `${num(ak)}`;
+        const facs = Array.from({ length: k }, (_, j) => `(x-${num(xs[j])})`).join('');
+        const coef = num(ak);
+        const coefTok = Math.abs(Number(coef)) === 1 && k>0 ? (Number(coef) < 0 ? '-' : '') : `${coef}\\,`;
+        return `${coefTok}${facs}`;
+      }).join(' + ').replace(/\+\s-\s/g, '- ');
+
+    steps.push(`$$\\textbf{Paso 4. Coeficientes:}\\; ${akList}.$$`);
+    steps.push(`$$\\text{Forma de Newton:}\\; P(x)= ${newtonSymbolic} = ${newtonNumeric}.$$`);
+
+    // Paso 5: Forma estándar
+    const polyStdLatex = this.latexPolynomial(coeffsStd, 'x');
+    steps.push(`$$\\textbf{Paso 5. Forma estándar:}\\; P(x)= ${polyStdLatex}.$$`);
+
+    return steps;
+  }
+
+  private latexDDTable(xs: number[], dd: number[][]): string {
+    const n = xs.length;
+    const cols = 'c|c|' + 'c'.repeat(n); // i | x | f[...] | Orden 1..n-1
+    let header = `i & x_i & f[x_i]`;
+    for (let j = 1; j < n; j++) header += ` & \\text{Orden }${j}`;
+    header += `\\\\\\hline`;
+
+    let rows = '';
+    for (let i = 0; i < n; i++) {
+      let row = `${i} & ${this.num(xs[i])} & ${this.num(dd[i][0])}`;
+      for (let j = 1; j < n; j++) {
+        if (i <= n - 1 - j) row += ` & ${this.num(dd[i][j])}`;
+        else row += ` & `;
+      }
+      rows += row + `\\\\`;
+    }
+
+    return `$$\\begin{array}{${cols}}\\hline ${header} ${rows} \\hline\\end{array}$$`;
+  }
+
+  private latexPolynomial(coeffs: number[], variable: string): string {
+    const eps = Math.pow(10, -this.decimals);
+    const parts: string[] = [];
+    for (let k = coeffs.length - 1; k >= 0; k--) {
+      let c = Number(coeffs[k].toFixed(this.decimals));
+      if (Math.abs(c) < eps) continue;
+      const sign = c >= 0 ? '+' : '-';
+      c = Math.abs(c);
+      let term = '';
+      if (k === 0) term = `${this.num(c)}`;
+      else if (k === 1) term = (Math.abs(c - 1) < eps) ? `${variable}` : `${this.num(c)}${variable}`;
+      else term = (Math.abs(c - 1) < eps) ? `${variable}^{${k}}` : `${this.num(c)}${variable}^{${k}}`;
+      parts.push(`${sign} ${term}`);
+    }
+    if (!parts.length) return '0';
+    let s = parts.join(' ');
+    s = s.replace(/^\+\s/, ''); // quitar signo inicial +
+    s = s.replace(/\+\s-\s/g, '- ');
+    return s;
+  }
+
+  private num(v: number | null): string {
+    return Number(v ?? 0).toFixed(this.decimals).replace(/-0\.0+$/,'0');
+  }
+
+  // Re-tiposet (MathJax v3 si está disponible)
+  private typeset() {
+    setTimeout(() => {
+      (window as any)?.MathJax?.typesetPromise?.();
+    }, 0);
+  }
 }

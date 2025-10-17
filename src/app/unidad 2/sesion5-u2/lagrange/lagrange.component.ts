@@ -1,13 +1,14 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 type Point = { x: number; y: number };
 
 @Component({
   selector: 'app-lagrange',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './lagrange.component.html',
   styleUrls: ['./lagrange.component.css'],
 })
