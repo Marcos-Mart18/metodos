@@ -39,7 +39,7 @@ export class SimplexComponent implements OnInit {
   maxIterations = 100;
 
   get hasUnsupportedTypes(): boolean {
-    return this.constraints.some(c => c.type !== '<=');
+    return false;
   }
 
   objectKeys(obj: any): string[] {
@@ -161,11 +161,12 @@ export class SimplexComponent implements OnInit {
     return { tableau: rows, headers };
   }
 
-  findPivotColumn(tableau: number[][]): number {
+  findPivotColumn(tableau: number[][], limitJ?: number): number {
     const z = tableau[tableau.length - 1];
     let minVal = 0;
     let pivotCol = -1;
-    for (let j = 0; j < z.length - 1; j++) {
+    const end = (limitJ ?? (z.length - 1));
+    for (let j = 0; j < end; j++) {
       if (z[j] < minVal - this.EPS) {
         minVal = z[j];
         pivotCol = j;
@@ -260,8 +261,7 @@ export class SimplexComponent implements OnInit {
   solveSimplex(): void {
     this.solutionSteps = [];
     this.optimalSolution = null;
-  
-    // Validaciones
+
     if (this.objectiveFunction.length !== this.numVariables) {
       this.optimalSolution = { error: 'La función objetivo no coincide con el número de variables.' };
       return;
@@ -270,19 +270,80 @@ export class SimplexComponent implements OnInit {
       this.optimalSolution = { error: 'El número de restricciones no coincide.' };
       return;
     }
-    if (this.hasUnsupportedTypes) {
-      this.optimalSolution = { error: 'Por ahora solo se soportan restricciones de tipo ≤.' };
-      return;
+
+    const normalized = this.constraints.map(c => ({ ...c, coefficients: [...c.coefficients] }));
+    for (let i = 0; i < normalized.length; i++) {
+      if (normalized[i].rhs < 0) {
+        for (let j = 0; j < normalized[i].coefficients.length; j++) normalized[i].coefficients[j] *= -1;
+        normalized[i].rhs *= -1;
+        normalized[i].type = normalized[i].type === '<=' ? '>=' : normalized[i].type === '>=' ? '<=' : '=';
+      }
     }
-  
-    let { tableau, headers } = this.createInitialTableau();
+
+    const m = this.numConstraints;
+    const n = this.numVariables;
+
+    const slackMap: number[] = [];
+    const surplusMap: number[] = [];
+    const artificialMap: number[] = [];
+    let slackCount = 0, surplusCount = 0, artificialCount = 0;
+    for (let i = 0; i < m; i++) {
+      if (normalized[i].type === '<=') {
+        slackMap[i] = slackCount++;
+        surplusMap[i] = -1;
+        artificialMap[i] = -1;
+      } else if (normalized[i].type === '>=') {
+        surplusMap[i] = surplusCount++;
+        slackMap[i] = -1;
+        artificialMap[i] = artificialCount++;
+      } else {
+        slackMap[i] = -1;
+        surplusMap[i] = -1;
+        artificialMap[i] = artificialCount++;
+      }
+    }
+
+    const headers: string[] = [
+      ...Array.from({ length: n }, (_, i) => `x${i + 1}`),
+      ...Array.from({ length: slackCount }, (_, i) => `s${i + 1}`),
+      ...Array.from({ length: surplusCount }, (_, i) => `t${i + 1}`),
+      ...Array.from({ length: artificialCount }, (_, i) => `a${i + 1}`),
+      'RHS',
+    ];
+
+    const totalCols = n + slackCount + surplusCount + artificialCount + 1;
+    const rows: number[][] = [];
+    const artColStart = n + slackCount + surplusCount;
+    const artBasicRow: boolean[] = Array(m).fill(false);
+
+    for (let i = 0; i < m; i++) {
+      const row = Array(totalCols).fill(0);
+      for (let j = 0; j < n; j++) row[j] = normalized[i].coefficients[j] ?? 0;
+      if (slackMap[i] >= 0) row[n + slackMap[i]] = 1;
+      if (surplusMap[i] >= 0) row[n + slackCount + surplusMap[i]] = -1;
+      if (artificialMap[i] >= 0) {
+        row[artColStart + artificialMap[i]] = 1;
+        artBasicRow[i] = true;
+      }
+      row[totalCols - 1] = normalized[i].rhs ?? 0;
+      rows.push(row);
+    }
+
+    const zRowPhase1 = Array(totalCols).fill(0);
+    for (let k = 0; k < artificialCount; k++) zRowPhase1[artColStart + k] = -1;
+    for (let i = 0; i < m; i++) {
+      if (artBasicRow[i]) {
+        for (let j = 0; j < totalCols; j++) zRowPhase1[j] += rows[i][j];
+      }
+    }
+    rows.push(zRowPhase1);
+
+    let tableau = rows;
     let iteration = 0;
-  
+
     while (iteration < this.maxIterations) {
       const z = tableau[tableau.length - 1][tableau[0].length - 1];
       const pivotCol = this.findPivotColumn(tableau);
-  
-      // Óptimo alcanzado
       if (pivotCol === -1) {
         this.solutionSteps.push({
           iteration,
@@ -294,13 +355,11 @@ export class SimplexComponent implements OnInit {
           leavingVar: null,
           pivot: null,
           z,
-          note: 'No hay coeficientes negativos en la fila Z.',
+          note: 'Fin Fase I',
         });
-        this.optimalSolution = this.extractSolution(tableau, headers);
-        return;
+        break;
       }
-  
-      // Busca fila pivote
+
       const { row: pivotRow, ratios } = this.findPivotRow(tableau, pivotCol);
       if (pivotRow === -1) {
         this.solutionSteps.push({
@@ -314,17 +373,16 @@ export class SimplexComponent implements OnInit {
           pivot: null,
           ratios,
           z,
-          note: 'Solución no acotada (ninguna razón positiva).',
+          note: 'Solución no acotada en Fase I.',
         });
-        this.optimalSolution = { error: 'Solución no acotada.' };
+        this.optimalSolution = { error: 'Solución no acotada en Fase I.' };
         return;
       }
-  
-      // Registrar y pivoteo
+
       const enteringVar = headers[pivotCol];
       const leavingVar = `R${pivotRow + 1}`;
       const pivot = tableau[pivotRow][pivotCol];
-  
+
       this.solutionSteps.push({
         iteration,
         tableau: JSON.parse(JSON.stringify(tableau)),
@@ -336,14 +394,104 @@ export class SimplexComponent implements OnInit {
         pivot,
         ratios,
         z,
-        note: 'Selecciona columna con coeficiente más negativo y aplica razón mínima.',
+        note: 'Pivoteo Fase I',
       });
-  
+
       this.performPivot(tableau, pivotRow, pivotCol);
       iteration++;
     }
-  
-    // Si sale por límite de iteraciones
+
+    const zPhase1 = tableau[tableau.length - 1][tableau[0].length - 1];
+    if (Math.abs(zPhase1) > 1e-7) {
+      this.optimalSolution = { error: 'Modelo inviable (Fase I no logró Z=0).'};
+      return;
+    }
+
+    const zRowPhase2 = Array(totalCols).fill(0);
+    for (let j = 0; j < n; j++) zRowPhase2[j] = -(this.objectiveFunction[j] ?? 0);
+    tableau[tableau.length - 1] = zRowPhase2;
+
+    for (let i = 0; i < m; i++) {
+      let basicCol: number | null = null;
+      for (let j = 0; j < totalCols - 1; j++) {
+        if (Math.abs(tableau[i][j] - 1) < 1e-7) {
+          let unit = true;
+          for (let r = 0; r < m; r++) {
+            if (r === i) continue;
+            if (Math.abs(tableau[r][j]) > 1e-7) { unit = false; break; }
+          }
+          if (unit) { basicCol = j; break; }
+        }
+      }
+      if (basicCol !== null && basicCol < n) {
+        const c = this.objectiveFunction[basicCol] ?? 0;
+        if (Math.abs(c) > this.EPS) {
+          for (let j = 0; j < totalCols; j++) tableau[tableau.length - 1][j] += c * tableau[i][j];
+        }
+      }
+    }
+
+    while (iteration < this.maxIterations) {
+      const z = tableau[tableau.length - 1][tableau[0].length - 1];
+      const pivotCol = this.findPivotColumn(tableau, artColStart);
+      if (pivotCol === -1) {
+        this.solutionSteps.push({
+          iteration,
+          tableau: JSON.parse(JSON.stringify(tableau)),
+          headers: [...headers],
+          enteringCol: null,
+          leavingRow: null,
+          enteringVar: null,
+          leavingVar: null,
+          pivot: null,
+          z,
+          note: 'Óptimo Fase II',
+        });
+        this.optimalSolution = this.extractSolution(tableau, headers);
+        return;
+      }
+
+      const { row: pivotRow, ratios } = this.findPivotRow(tableau, pivotCol);
+      if (pivotRow === -1) {
+        this.solutionSteps.push({
+          iteration,
+          tableau: JSON.parse(JSON.stringify(tableau)),
+          headers: [...headers],
+          enteringCol: pivotCol,
+          leavingRow: null,
+          enteringVar: headers[pivotCol],
+          leavingVar: null,
+          pivot: null,
+          ratios,
+          z,
+          note: 'Solución no acotada en Fase II.',
+        });
+        this.optimalSolution = { error: 'Solución no acotada.' };
+        return;
+      }
+
+      const enteringVar = headers[pivotCol];
+      const leavingVar = `R${pivotRow + 1}`;
+      const pivot = tableau[pivotRow][pivotCol];
+
+      this.solutionSteps.push({
+        iteration,
+        tableau: JSON.parse(JSON.stringify(tableau)),
+        headers: [...headers],
+        enteringCol: pivotCol,
+        leavingRow: pivotRow,
+        enteringVar,
+        leavingVar,
+        pivot,
+        ratios,
+        z,
+        note: 'Pivoteo Fase II',
+      });
+
+      this.performPivot(tableau, pivotRow, pivotCol);
+      iteration++;
+    }
+
     this.optimalSolution = { error: `Se alcanzó el máximo de ${this.maxIterations} iteraciones sin converger.` };
     return;
   }

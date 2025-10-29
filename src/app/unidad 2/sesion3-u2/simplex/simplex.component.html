@@ -93,8 +93,8 @@
           <select [(ngModel)]="constraint.type"
                   class="p-2 border border-gray-300 rounded-md w-24 focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="<=">&le;</option>
-            <option value="=" disabled>= (no soportado)</option>
-            <option value=">=" disabled>&ge; (no soportado)</option>
+            <option value="=">=</option>
+            <option value=">=">&ge;</option>
           </select>
 
           <input
@@ -133,9 +133,6 @@
         <ul class="list-disc pl-6 space-y-1">
           <li *ngFor="let c of constraints; let i = index">{{ prettyConstraint(i) }}</li>
         </ul>
-        <p class="mt-2 text-xs text-amber-600" *ngIf="hasUnsupportedTypes">
-          ⚠️ Por ahora solo se resuelven restricciones de tipo ≤. Las opciones “=” y “≥” están deshabilitadas.
-        </p>
       </div>
     </div>
 
