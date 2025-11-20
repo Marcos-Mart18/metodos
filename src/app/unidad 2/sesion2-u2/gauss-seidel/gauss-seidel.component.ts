@@ -175,7 +175,16 @@ export class GaussSeidelComponent {
         fx[i] = aiDotX - b[i];
       }
 
-      log.push({ k, x: [...x], fx, e });
+      // Asegura que fx y e tengan longitud n (defensive)
+      if (fx.length !== n) fx.length = n;
+      if (e.length !== n) e.length = n;
+
+      // DEBUG: imprimir fx y e por iteración para detectar celdas faltantes
+      try {
+        console.log('GaussSeidel iter', k, 'x=', x, 'fx=', fx, 'e(%)=', e);
+      } catch {}
+
+      log.push({ k, x: [...x], fx: [...fx], e: [...e] });
 
       // Paro: TODAS las variables cumplen e_i(%) ≤ tol*100
       const tolPct = tol * 100;
@@ -229,6 +238,10 @@ export class GaussSeidelComponent {
       this.tol(),
       this.maxIter()
     );
+    // DEBUG: imprimir log completo para depuración de columnas fx
+    try {
+      console.log('GaussSeidel final log:', JSON.parse(JSON.stringify(log)));
+    } catch {}
     this.solution.set(x);
     this.iterations.set(log);
     this.page.set(1);
@@ -248,6 +261,17 @@ export class GaussSeidelComponent {
   changePage(p: number): void {
     if (p < 1 || p > this.totalPages()) return;
     this.page.set(p);
+  }
+
+  // Formatea números para la UI: evita mostrar valores cercanos a 0 como -0 o notación extraña
+  formatNumber(v: number, digits = 8): string {
+    if (!Number.isFinite(v)) return String(v);
+    if (Math.abs(v) < this.EPS) return '0';
+    try {
+      return Number(v).toPrecision(Math.min(Math.max(digits, 2), 12));
+    } catch {
+      return String(v);
+    }
   }
 
   // Ejemplo rápido (dominante)

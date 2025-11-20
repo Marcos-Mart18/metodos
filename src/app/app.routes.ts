@@ -27,6 +27,10 @@ import { MinCuadradosComponent } from './unidad 2/sesion4-u2/min-cuadrados/min-c
 import { Sesion5U2Component } from './unidad 2/sesion5-u2/sesion5-u2.component';
 import { LagrangeComponent } from './unidad 2/sesion5-u2/lagrange/lagrange.component';
 import { DfdnewtonComponent } from './unidad 2/sesion5-u2/dfdnewton/dfdnewton.component';
+import { SesionFinalComponent } from './unidad3/sesion-final/sesion-final.component';
+import { PuntoMedioComponent } from './unidad3/sesion-final/punto-medio/punto-medio.component';
+import { EulerComponent } from './unidad3/sesion-final/euler/euler.component';
+import { HeunComponent } from './unidad3/sesion-final/heun/heun.component';
 
 export const routes: Routes = [
   {
@@ -145,6 +149,22 @@ export const routes: Routes = [
   {
     path: 'dfdnewton',
     component: DfdnewtonComponent,
+  },
+  {
+    path: 'sesion10',
+    component: SesionFinalComponent,
+  },
+  {
+    path: 'euler',
+    component: EulerComponent,
+  },
+  {
+    path: 'punto-medio',
+    component: PuntoMedioComponent,
+  },
+  {
+    path: 'heun',
+    component: HeunComponent,
   },
   {
     path: '**',
