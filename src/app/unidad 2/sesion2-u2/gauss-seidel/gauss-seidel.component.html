@@ -246,17 +246,17 @@
 
                 <!-- x -->
                 <td class="px-3 py-2 text-center" *ngFor="let xi of it.x">
-                  <span [textContent]="xi | number : '1.0-8'"></span>
+                  <span [textContent]="formatNumber(xi)"></span>
                 </td>
 
                 <!-- fx -->
                 <td class="px-3 py-2 text-center" *ngFor="let fxi of it.fx">
-                  <span [textContent]="fxi | number : '1.0-8'"></span>
+                  <span [textContent]="formatNumber(fxi)"></span>
                 </td>
 
                 <!-- e_i (%) -->
                 <td class="px-3 py-2 text-center" *ngFor="let ei of it.e">
-                  <span [textContent]="ei | number : '1.0-8'"></span>%
+                  <span [textContent]="formatNumber(ei)"></span>%
                 </td>
               </tr>
             </tbody>
