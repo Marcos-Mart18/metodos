@@ -1,51 +1,76 @@
-<a routerLink="/sesion9"
-   class="self-start inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition mb-6">
-  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-    <path d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .64-.23 1 1 0 0 0 .13-1.41L7.14 13H19a1 1 0 0 0 0-2z"/>
+<a
+  routerLink="/sesion9"
+  class="self-start inline-flex items-center gap-2 bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-bold text-sm px-4 py-2 rounded-lg shadow-md hover:shadow-lg hover:from-[#003366] hover:to-[#004080] hover:-translate-y-0.5 transition mb-6"
+>
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    class="w-5 h-5"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+  >
+    <path
+      d="M19 11H7.14l3.63-4.36a1 1 0 1 0-1.54-1.28l-5 6a1 1 0 0 0 0 1.28l5 6A1 1 0 0 0 10 19a1 1 0 0 0 .64-.23 1 1 0 0 0 .13-1.41L7.14 13H19a1 1 0 0 0 0-2z"
+    />
   </svg>
   <span>Volver</span>
 </a>
 
-<div class="p-6 min-h-screen flex flex-col items-center bg-gray-50">
-  <div class="w-full max-w-6xl bg-white rounded-2xl shadow-lg border border-gray-200 p-6 space-y-6">
-
+<div class="p-6 min-h-screen flex flex-col items-center">
+  <div
+    class="w-full max-w-6xl bg-white rounded-2xl shadow-lg border border-gray-200 p-6 space-y-6"
+  >
     <!-- Encabezado -->
     <div class="grid md:grid-cols-2 gap-6">
       <div>
-        <h2 class="text-xl font-bold text-[#001C48]">Interpolación Polinómica — Método de Lagrange</h2>
-        <p class="text-sm text-gray-600 mt-1">Ingresa puntos (x, y) por texto o usando una tabla.</p>
+        <h2 class="text-xl font-bold text-[#001C48]">
+          Interpolación Polinómica — Método de Lagrange
+        </h2>
+        <p class="text-sm text-gray-600 mt-1">
+          Ingresa puntos (x, y) por texto o usando una tabla.
+        </p>
       </div>
       <div class="flex items-end justify-end">
         <div class="text-right">
           <label class="block text-xs text-slate-700">Decimales</label>
-          <input type="number" min="0" max="10" [(ngModel)]="decimals"
-                 class="w-24 px-3 py-1 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400">
+          <input
+            type="number"
+            min="0"
+            max="10"
+            [(ngModel)]="decimals"
+            class="w-24 px-3 py-1 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
+          />
         </div>
       </div>
     </div>
 
     <!-- Toggle modo -->
     <div class="inline-flex rounded-lg bg-gray-100 p-1">
-      <button class="px-4 py-2 rounded-md text-sm transition hover:bg-white hover:shadow"
-              [class.bg-white]="mode==='tabla'"
-              [class.shadow]="mode==='tabla'"
-              (click)="mode='tabla'">
+      <button
+        class="px-4 py-2 rounded-md text-sm transition hover:bg-white hover:shadow"
+        [class.bg-white]="mode === 'tabla'"
+        [class.shadow]="mode === 'tabla'"
+        (click)="mode = 'tabla'"
+      >
         En tablita
       </button>
-      <button class="px-4 py-2 rounded-md text-sm transition hover:bg-white hover:shadow"
-              [class.bg-white]="mode==='texto'"
-              [class.shadow]="mode==='texto'"
-              (click)="mode='texto'">
+      <button
+        class="px-4 py-2 rounded-md text-sm transition hover:bg-white hover:shadow"
+        [class.bg-white]="mode === 'texto'"
+        [class.shadow]="mode === 'texto'"
+        (click)="mode = 'texto'"
+      >
         Por puntos (texto)
       </button>
     </div>
 
     <!-- Entrada por tabla -->
-    <section *ngIf="mode==='tabla'">
+    <section *ngIf="mode === 'tabla'">
       <h3 class="text-lg font-semibold text-[#003366] mb-2">Datos en tabla</h3>
 
       <div class="overflow-x-auto">
-        <table class="min-w-full border border-gray-200 rounded-lg overflow-hidden">
+        <table
+          class="min-w-full border border-gray-200 rounded-lg overflow-hidden"
+        >
           <thead class="bg-gray-100 text-gray-700">
             <tr>
               <th class="px-3 py-2 text-left text-sm">#</th>
@@ -55,19 +80,33 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
-            <tr *ngFor="let r of points; let i = index" class="odd:bg-white even:bg-gray-50">
+            <tr
+              *ngFor="let r of points; let i = index"
+              class="odd:bg-white even:bg-gray-50"
+            >
               <td class="px-3 py-2 text-sm">{{ i }}</td>
               <td class="px-3 py-2">
-                <input type="number" step="any" [(ngModel)]="r.x"
-                       class="w-40 sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"/>
+                <input
+                  type="number"
+                  step="any"
+                  [(ngModel)]="r.x"
+                  class="w-40 sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
+                />
               </td>
               <td class="px-3 py-2">
-                <input type="number" step="any" [(ngModel)]="r.y"
-                       class="w-40 sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"/>
+                <input
+                  type="number"
+                  step="any"
+                  [(ngModel)]="r.y"
+                  class="w-40 sm:w-48 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
+                />
               </td>
               <td class="px-3 py-2">
-                <button class="px-3 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-40"
-                        (click)="removeRow(i)" [disabled]="points.length <= 2">
+                <button
+                  class="px-3 py-2 text-sm rounded-md border border-gray-300 hover:bg-gray-100 disabled:opacity-40"
+                  (click)="removeRow(i)"
+                  [disabled]="points.length <= 2"
+                >
                   Eliminar
                 </button>
               </td>
@@ -78,57 +117,100 @@
 
       <!-- Botones -->
       <div class="mt-3 flex flex-wrap gap-2">
-        <button class="px-4 py-2 rounded-md bg-indigo-50 text-slate-800 border border-indigo-200 hover:bg-indigo-100"
-                (click)="addRow()">+ Agregar fila</button>
+        <button
+          class="px-4 py-2 rounded-md bg-indigo-50 text-slate-800 border border-indigo-200 hover:bg-indigo-100"
+          (click)="addRow()"
+        >
+          + Agregar fila
+        </button>
 
-        <button class="px-4 py-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
-                (click)="clear()">Limpiar</button>
+        <button
+          class="px-4 py-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+          (click)="clear()"
+        >
+          Limpiar
+        </button>
 
-        <button class="px-4 py-2 rounded-md bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-semibold hover:from-[#003366] hover:to-[#004080] hover:shadow-md transition"
-                (click)="calculate()">Calcular</button>
+        <button
+          class="px-4 py-2 rounded-md bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-semibold hover:from-[#003366] hover:to-[#004080] hover:shadow-md transition"
+          (click)="calculate()"
+        >
+          Calcular
+        </button>
       </div>
     </section>
 
     <!-- Entrada por texto -->
-    <section *ngIf="mode==='texto'" class="space-y-4">
-      <h3 class="text-lg font-semibold text-[#003366]">Datos por puntos (texto)</h3>
+    <section *ngIf="mode === 'texto'" class="space-y-4">
+      <h3 class="text-lg font-semibold text-[#003366]">
+        Datos por puntos (texto)
+      </h3>
 
       <div class="grid sm:grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">X (separadas por coma/espacio)</label>
-          <textarea [(ngModel)]="xText" rows="4"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Ej: 0, 1, 2, 3"></textarea>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >X (separadas por coma/espacio)</label
+          >
+          <textarea
+            [(ngModel)]="xText"
+            rows="4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Ej: 0, 1, 2, 3"
+          ></textarea>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Y (separadas por coma/espacio)</label>
-          <textarea [(ngModel)]="yText" rows="4"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
-                    placeholder="Ej: 1, 3, 5, 7"></textarea>
+          <label class="block text-sm font-medium text-gray-700 mb-1"
+            >Y (separadas por coma/espacio)</label
+          >
+          <textarea
+            [(ngModel)]="yText"
+            rows="4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
+            placeholder="Ej: 1, 3, 5, 7"
+          ></textarea>
         </div>
       </div>
 
       <div class="mt-3 flex flex-wrap gap-2">
-        <button class="px-4 py-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
-                (click)="clear()">Limpiar</button>
+        <button
+          class="px-4 py-2 rounded-md bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100"
+          (click)="clear()"
+        >
+          Limpiar
+        </button>
 
-        <button class="px-4 py-2 rounded-md bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-semibold hover:from-[#003366] hover:to-[#004080] hover:shadow-md transition"
-                (click)="calculate()">Calcular</button>
+        <button
+          class="px-4 py-2 rounded-md bg-gradient-to-b from-[#001C48] to-[#003366] text-white font-semibold hover:from-[#003366] hover:to-[#004080] hover:shadow-md transition"
+          (click)="calculate()"
+        >
+          Calcular
+        </button>
       </div>
 
-      <p class="text-xs text-gray-500">Tip: también puedes separar con punto y coma o saltos de línea.</p>
+      <p class="text-xs text-gray-500">
+        Tip: también puedes separar con punto y coma o saltos de línea.
+      </p>
     </section>
 
     <!-- Error -->
-    <div *ngIf="error" class="p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-200">
+    <div
+      *ngIf="error"
+      class="p-3 rounded-lg bg-rose-50 text-rose-700 text-sm border border-rose-200"
+    >
       {{ error }}
     </div>
 
     <!-- Resultados -->
-    <div class="flex flex-col gap-6" [class.hidden]="!calculado" [attr.aria-hidden]="!calculado">
+    <div
+      class="flex flex-col gap-6"
+      [class.hidden]="!calculado"
+      [attr.aria-hidden]="!calculado"
+    >
       <!-- Card polinomio -->
       <div class="border border-gray-200 rounded-xl p-4">
-        <h4 class="font-bold text-[#001C48] mb-2">Polinomio P(x) — forma estándar</h4>
+        <h4 class="font-bold text-[#001C48] mb-2">
+          Polinomio P(x) — forma estándar
+        </h4>
         <div class="font-mono text-sm break-words">P(x) = {{ polyString }}</div>
         <div class="text-sm text-gray-600 mt-1">Grado: {{ degree }}</div>
       </div>
@@ -136,9 +218,13 @@
       <!-- Cards: Coeficientes y Evaluación -->
       <div class="grid lg:grid-cols-2 gap-4">
         <div class="border border-gray-200 rounded-xl p-4">
-          <h4 class="font-bold text-[#001C48] mb-2">Coeficientes (a<sub>k</sub>)</h4>
+          <h4 class="font-bold text-[#001C48] mb-2">
+            Coeficientes (a<sub>k</sub>)
+          </h4>
           <ul class="space-y-1 font-mono text-sm">
-            <li *ngFor="let c of coeffs; let k = index">a{{k}} = {{ formatNum(c) }}</li>
+            <li *ngFor="let c of coeffs; let k = index">
+              a{{ k }} = {{ formatNum(c) }}
+            </li>
           </ul>
         </div>
 
@@ -146,8 +232,13 @@
           <h4 class="font-bold text-[#001C48] mb-2">Evaluar P(t)</h4>
           <div class="flex items-center gap-2">
             <label class="text-sm">t:</label>
-            <input type="number" step="any" [(ngModel)]="tEval" (ngModelChange)="evaluate()"
-                   class="w-40 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"/>
+            <input
+              type="number"
+              step="any"
+              [(ngModel)]="tEval"
+              (ngModelChange)="evaluate()"
+              class="w-40 px-3 py-2 border border-gray-300 rounded-md outline-none focus:ring-2 focus:ring-blue-400"
+            />
           </div>
           <div class="mt-2 text-sm" *ngIf="pEval !== null">
             P(t) = <span class="font-mono">{{ formatNum(pEval!) }}</span>
@@ -156,20 +247,27 @@
       </div>
 
       <!-- Pasos (LaTeX) -->
-      <div *ngIf="calculado && latexSteps.length" class="border border-gray-200 rounded-xl p-4">
+      <div
+        *ngIf="calculado && latexSteps.length"
+        class="border border-gray-200 rounded-xl p-4"
+      >
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-[#001C48]">Pasos</h4>
           <label class="inline-flex items-center gap-2 text-sm">
-            <input type="checkbox" [(ngModel)]="showSteps" class="rounded border-gray-300">
+            <input
+              type="checkbox"
+              [(ngModel)]="showSteps"
+              class="rounded border-gray-300"
+            />
             Mostrar/Ocultar
           </label>
         </div>
 
         <div class="mt-3 space-y-3" [class.hidden]="!showSteps">
-          <div *ngFor="let s of latexSteps"
-               class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900
-                      text-xs sm:text-sm leading-tight overflow-x-auto max-w-full px-1
-                      [&_.katex-display]:my-1 [&_.katex-display]:last:mb-0">
+          <div
+            *ngFor="let s of latexSteps"
+            class="p-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-900 text-xs sm:text-sm leading-tight overflow-x-auto max-w-full px-1 [&_.katex-display]:my-1 [&_.katex-display]:last:mb-0"
+          >
             <div [innerHTML]="s"></div>
           </div>
         </div>
