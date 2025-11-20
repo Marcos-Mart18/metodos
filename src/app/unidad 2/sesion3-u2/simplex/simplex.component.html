@@ -1,4 +1,4 @@
-<div class="p-6 min-h-screen flex flex-col items-center bg-gray-50">
+<div class="p-6 min-h-screen flex flex-col items-center">
   <div
     class="w-full max-w-5xl bg-white rounded-2xl shadow-lg border border-gray-200 p-6"
   >
@@ -88,7 +88,11 @@
       >
       <div class="flex flex-wrap items-center gap-2 mt-2">
         <span
-          *ngFor="let coef of objectiveFunction; let i = index; trackBy: trackByIndex"
+          *ngFor="
+            let coef of objectiveFunction;
+            let i = index;
+            trackBy: trackByIndex
+          "
           class="flex items-center gap-1"
         >
           <input
@@ -110,7 +114,11 @@
     <h3 class="text-2xl font-semibold mb-3 text-[#001C48]">Sujeto a</h3>
     <div class="space-y-4">
       <div
-        *ngFor="let constraint of constraints; let i = index; trackBy: trackByIndex"
+        *ngFor="
+          let constraint of constraints;
+          let i = index;
+          trackBy: trackByIndex
+        "
         class="border rounded-xl p-4 bg-gray-50"
       >
         <label class="block text-lg font-medium text-[#001C48] mb-2"
@@ -118,7 +126,11 @@
         >
         <div class="flex flex-wrap items-center gap-2">
           <span
-            *ngFor="let coef of constraint.coefficients; let j = index; trackBy: trackByIndex"
+            *ngFor="
+              let coef of constraint.coefficients;
+              let j = index;
+              trackBy: trackByIndex
+            "
             class="flex items-center gap-1"
           >
             <input
